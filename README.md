@@ -1,10 +1,4 @@
 # SurfTracker
-Tractography of the super
+Probabilistic tractography in Superficial White Matter. This method enables the reconstruction of the fiber tracts in Superficial White Matter, which has a sheer structure with high curvature. This tracking algorithm works on the triangular mesh of the white matter and overcomes the difficulties of conventional tractography.
 
-Author: Xinyu Nie
-
-Created: 2022/11/10
-
-Copyright:The Neuro Image Computing Research (NICR) group at the Mark and Mary Stevens Neuroimaging  and Informatics Institute of USC Laboratory of NeuroImaging USC Stevens Neuroimaging and Informatics Institute
-
-email: xnie@usc.edu
+This tractography algorithm was developed in both C++ and Matlab versions.
