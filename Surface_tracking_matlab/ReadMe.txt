@@ -19,7 +19,7 @@ Inputs:
 %Num of iteration is the repeating tracks for each seed triangle; if you need more streamlines, increase it.
 %FOD_THD is the minimum FOD value we accept in reject sampling
 %Trackdegree is the upper bound degree for tracking 
-%Gyrusflag is the flag for Gyruslabel, Gyrusflag=0, for Gyruslabel1 not equals Gyruslabel2; Gyrusflag=1, for Gyruslabel1 equals Gyruslabel2
+%Gyrusflag is the flag for Gyruslabel, set Gyrusflag=0, for Gyruslabel1 not equals Gyruslabel2; set Gyrusflag=1, for Gyruslabel1 equals Gyruslabel2
 %ShrinkDis is the deformed distance of the WM mesh
 
 
