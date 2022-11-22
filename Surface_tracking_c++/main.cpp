@@ -1,10 +1,16 @@
+#ifdef BUILD_FOR_WINDOWS
+#include<windows.h>
+#include<io.h>
+#else 
+#include <unistd.h>
+#endif
+
 #include <iostream>
 #include "SurfacePro/SurfaceFODPro.h"
 #include "header/Ufibertracking.h"
 #include <unordered_map>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include "header/load_mat.h"
 #include <sys/time.h>
 using namespace std;
