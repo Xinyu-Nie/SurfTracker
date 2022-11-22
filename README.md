@@ -10,4 +10,4 @@ Fiber Orientation Distribution (FOD) data, A preregistered triangular mesh of th
 
 
 
-Acknowledgment: The Matlab codes that load the NIfTI document are from: Jimmy Shen (2022). Tools for NIfTI and ANALYZE image (https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image), MATLAB Central File Exchange. Retrieved November 22, 2022.
+Acknowledgment: The Matlab codes that load the NIfTI document are from: Jimmy Shen (2022). Tools for NIfTI and ANALYZE image (https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image).
