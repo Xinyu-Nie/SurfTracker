@@ -7,7 +7,8 @@ https://drive.google.com/file/d/1cjGqADdFo9s_4v5IIwN057iBGrawxx4B/view?usp=share
 ***Necessary  Data for Tractography:*** 
 Fiber Orientation Distribution (FOD) data, A preregistered triangular mesh of the white matter (from T1 space to diffusion space), A binary label for ROI on the mesh, A binary label for seeds of tractography, one or two binary labels for stopping criteria. 
 
-
+***Preprint Publications:*** Probabilistic Tracking of U-fibers on the Superficial White Matter Surface. Xinyu Nie, Yonggang Shi,
+bioRxiv 2022.05.05.490829; doi: https://doi.org/10.1101/2022.05.05.490829
 
 
 Acknowledgment: The Matlab codes that load the NIfTI document are from: Jimmy Shen (2022). Tools for NIfTI and ANALYZE image (https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image).
