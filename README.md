@@ -1,7 +1,7 @@
 # SurfTracker C/C++ v1.0 
 ## Contribution <br />
 Author: Jialiang Ruan <br />
-Created: 2022/11/10  <br />
+Created: 2023/5/10  <br />
 Copyright: The Neuro Image Computing Research (NICR) group at the Mark and Mary Stevens Neuroimaging 
 and Informatics Institute of USC Laboratory of NeuroImaging USC Stevens Neuroimaging and Informatics Institute <br />
 Email: jruan@usc.edu
@@ -19,6 +19,9 @@ bash build_mac.sh
 ### LINUX
 sh build_linux.sh<br/>
 <!-- The main function of the tractography is Ufibertracking.cpp. <br /> -->
+
+## Library and Compilation
+The Boost Library is needed for compliance; please download it and put them on the right path. Please also check if the CMake version in the script is the same as yours. <br />
 
 # Demo Usage
 ### run ./demo.sh<br/>
