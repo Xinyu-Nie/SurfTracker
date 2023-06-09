@@ -1,10 +1,12 @@
 # SurfTracker C/C++ v1.0 
 ## Contribution <br />
 Author: Jialiang Ruan <br />
+Corresponding author: Xinyu Nie <br />
 Created: 2023/5/10  <br />
 Copyright: The Neuro Image Computing Research (NICR) group at the Mark and Mary Stevens Neuroimaging 
 and Informatics Institute of USC Laboratory of NeuroImaging USC Stevens Neuroimaging and Informatics Institute <br />
-Email: jruan@usc.edu
+Email: jruan@usc.edu <br />
+Corresponding email: xnie@usc.edu <br />
 
 ## Enviroments
 ### git lfs
