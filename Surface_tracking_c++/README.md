@@ -5,7 +5,8 @@ Copyright: The Neuro Image Computing Research (NICR) group at the Mark and Mary 
 and Informatics Institute of USC Laboratory of NeuroImaging USC Stevens Neuroimaging and Informatics Institute <br />
 email: jruan@usc.edu
 
-Please see the demo01.sh for the usage of an example from HCP data.
+Please see the demo01.sh for the usage of an example from HCP data. <br />
+The Boost Library is needed for compliance; please download it and put them on the right path.<br />
 
 The main function of the tractography is Ufibertracking.cpp. <br />
 Inputs: <br />
