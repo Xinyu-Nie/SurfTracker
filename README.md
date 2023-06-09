@@ -26,7 +26,7 @@ sh build_linux.sh<br/>
 The Boost Library is needed for compliance; please download it and put them on the right path. Please also check if the CMake version in the script is the same as yours. <br />
 
 # Demo Usage
-### run ./demo.sh<br/>
+### run ./demo.sh (./demo.bat for win)<br/>
 ### set dir=(your data directory)
 ### start with main (main.exe for win) </br>
 ### follow with -arg value
