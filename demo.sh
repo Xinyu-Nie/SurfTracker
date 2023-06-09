@@ -1,5 +1,5 @@
 dir=../
-.main.exe -fod $dir/101107/101107_FOD_Order16_WholeVol.nii \
+./main -fod $dir/101107/101107_FOD_Order16_WholeVol.nii \
     -mesh $dir/101107/101107_white_lh.obj \
     -roi $dir/101107/101107_white_lh_PrePostcentralLabel.raw \
     -sulcus $dir/101107/101107_white_lh_PrePostcentralCommon2mm.raw \
