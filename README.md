@@ -1,7 +1,7 @@
 # SurfTracker
 ***A Probabilistic Tractography in Superficial White Matter:*** This algorithm enables the reconstruction of the fiber tracts in Superficial White Matter (SWM), which has a sheet structure with high curvature. This tracking algorithm works on the triangular mesh representation of the SWM and overcomes  difficulties in conventional volume-based tractography.
 <br />
-The algorithm was developed in both C++ and Matlab versions. Please check the ***Readme*** and ***demo01*** in the corresponding folder for details of usage. If you need more details and help to compile the C++ code for Linux, Mac, and Windows, you can visit ***branch dev-C++*** for more illustration. <br />
+The algorithm was developed in both C++ and Matlab versions. Please check the ***Readme*** and ***demo01*** in the corresponding folder for details of usage. If you need more details and help to compile the C++ code for Linux, Mac, and Windows, you can visit ***branch dev-C++*** for more illustration, where we provide scripts and libraries for convenience. <br />
 One subject data from the Human Connectome projects (HCP) is uploaded by ifs for illustration, and you can also use the google drive link below to download the dataset.<br />
 https://drive.google.com/file/d/1cjGqADdFo9s_4v5IIwN057iBGrawxx4B/view?usp=share_link
 
