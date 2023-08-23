@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "*.cpp": "cpp",
-        "thread": "cpp",
-        "iosfwd": "cpp"
-    }
-}
