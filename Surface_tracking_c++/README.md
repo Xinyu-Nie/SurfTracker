@@ -23,7 +23,10 @@ sh build_linux.sh<br/>
 <!-- The main function of the tractography is Ufibertracking.cpp. <br /> -->
 
 ## Library and Compilation
-The **Boost Library** is needed for compliance; please download it and put them on the right path. Please also check if the CMake version in the script is the same as yours. <br />
+The **Boost Library** is needed for compliance; please download it and put it on the right path. Here is the link to this library:<br />
+https://www.boost.org/ <br />
+
+Please also check if the CMake version in the script is the same as yours. <br />
 
 # Demo Usage
 ### run ./demo.sh (./demo.bat for win)<br/>
