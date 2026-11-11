@@ -1,0 +1,67 @@
+cff-version: 1.2.0
+message: >-
+  If you use the SurfTracker pipeline in scientific work, please cite BOTH
+  primary articles listed in references: Shi et al. (2008) for cortical
+  sulcus/gyrus segmentation and Hamilton-Jacobi skeletons, and Nie et al.
+  (2024) for surface-based probabilistic superficial white matter tracking.
+  Please also report the software version and processing settings used.
+type: software
+title: "SurfTracker: superficial white matter surface tracking"
+authors:
+  - family-names: Nie
+    given-names: Xinyu
+  - family-names: Shi
+    given-names: Yonggang
+version: "0.3.0.dev16"
+repository-code: "https://github.com/Xinyu-Nie/SurfTracker"
+url: "https://github.com/Xinyu-Nie/SurfTracker"
+keywords:
+  - superficial white matter
+  - tractography
+  - U-fibers
+  - Hamilton-Jacobi skeleton
+references:
+  - type: article
+    title: "Hamilton-Jacobi Skeleton on Cortical Surfaces"
+    authors:
+      - family-names: Shi
+        given-names: Yonggang
+      - family-names: Thompson
+        given-names: "Paul M."
+      - family-names: Dinov
+        given-names: Ivo
+      - family-names: Toga
+        given-names: "Arthur W."
+    journal: "IEEE Transactions on Medical Imaging"
+    year: 2008
+    month: 5
+    volume: 27
+    issue: 5
+    start: 664
+    end: 673
+    doi: "10.1109/TMI.2007.913279"
+    url: "https://doi.org/10.1109/TMI.2007.913279"
+  - type: article
+    title: "Surface-Based Probabilistic Fiber Tracking in Superficial White Matter"
+    authors:
+      - family-names: Nie
+        given-names: Xinyu
+      - family-names: Ruan
+        given-names: Jialiang
+      - family-names: "Garcia Otaduy"
+        given-names: "Maria Concepción"
+      - family-names: Grinberg
+        given-names: "Lea Tenenholz"
+      - family-names: Ringman
+        given-names: John
+      - family-names: Shi
+        given-names: Yonggang
+    journal: "IEEE Transactions on Medical Imaging"
+    year: 2024
+    month: 3
+    volume: 43
+    issue: 3
+    start: 1113
+    end: 1124
+    doi: "10.1109/TMI.2023.3329451"
+    url: "https://doi.org/10.1109/TMI.2023.3329451"

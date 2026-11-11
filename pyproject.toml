@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68", "wheel>=0.43"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "SurfTracker"
+version = "0.3.0.dev16"
+description = "World-space superficial white matter surface tractography"
+authors = [{name = "Xinyu Nie"}, {name = "Yonggang Shi"}]
+maintainers = [{name = "Xinyu Nie"}]
+readme = "README.rst"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "scipy>=1.11", "nibabel>=5", "numba>=0.61", "meshio>=5"]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+release = ["build", "twine", "setuptools>=68", "wheel>=0.43"]
+qc = ["matplotlib>=3.8"]
+registration = ["antspyx>=0.6.3"]
+
+[project.scripts]
+swmtrack = "swmtrack.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["swmtrack*"]
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[project.urls]
+Homepage = "https://github.com/Xinyu-Nie/SurfTracker"
+Source = "https://github.com/Xinyu-Nie/SurfTracker"
+Issues = "https://github.com/Xinyu-Nie/SurfTracker/issues"
+"Skeleton paper" = "https://doi.org/10.1109/TMI.2007.913279"
+"Tracking paper" = "https://doi.org/10.1109/TMI.2023.3329451"

@@ -1,0 +1,28 @@
+include CITATION.cff
+include CITATIONS.bib
+include AUTHORS.rst
+include THIRD_PARTY_NOTICES.rst
+include README.rst
+include README.md
+include CHANGELOG.rst
+include RELEASE_PREPARATION.rst
+include pyproject.toml
+include .gitignore
+recursive-include swmtrack *.py
+recursive-include tests *.py
+recursive-include scripts *.py
+recursive-include docs *.rst
+recursive-include examples *.rst
+recursive-include .github/workflows *.yml
+prune swmtrack/_native
+prune research
+prune research_tests
+prune results
+prune build
+prune dist
+prune .venv
+global-exclude *.pyc *.nbc *.nbi
+prune licensing
+prune Surface_tracking_c++
+prune Surface_tracking_matlab
+exclude 101107.tar.gz
