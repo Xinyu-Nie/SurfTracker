@@ -196,7 +196,7 @@ The proposed Python license does not relicense legacy source or example data.
 
 ## Cite both methods
 
-Please cite **both** articles when using this pipeline, if you prepare the ROIs by yourself, you can only cite 2:
+Please cite **both** articles when using this pipeline. If you prepare the ROIs and WM surface by yourself, you can only cite 2:
 
 1. Yonggang Shi, Paul M. Thompson, Ivo Dinov and Arthur W. Toga.
    *Hamilton-Jacobi Skeleton on Cortical Surfaces.* IEEE Transactions on Medical
