@@ -1,0 +1,130 @@
+name: Publish to TestPyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Upload the verified distributions to TestPyPI
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-testpypi
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify distributions from successful CI
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Find successful Package checks for this main commit
+        id: ci
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run_id=$(gh api --method GET \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs" \
+            -f branch=main -f event=push -f head_sha="$GITHUB_SHA" \
+            -f status=success --jq '.workflow_runs[0].id // empty')
+          if [[ ! "$run_id" =~ ^[0-9]+$ ]]; then
+            echo '::error::Wait for Package checks to succeed for this exact main commit, then rerun this workflow.'
+            exit 1
+          fi
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+      - name: Download the tested Linux Python 3.12 artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.ci.outputs.run_id }}
+          name: package-ubuntu-latest-py3.12
+          path: verified-ci
+      - name: Verify artifact checksums and stage the exact distributions
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import shutil
+
+          root = Path('verified-ci')
+          records = json.loads((root / 'release-audit/archives.json').read_text())['archives']
+          expected = {Path(item['path']).name: item for item in records}
+          files = list((root / 'dist').iterdir())
+          if len(files) != 2 or {p.name for p in files} != set(expected):
+              raise SystemExit('Expected the wheel and source archive recorded by CI')
+          destination = Path('dist')
+          destination.mkdir()
+          for path in files:
+              record = expected[path.name]
+              if hashlib.sha256(path.read_bytes()).hexdigest() != record['sha256']:
+                  raise SystemExit(f'CI artifact checksum mismatch: {path.name}')
+              if any(hashlib.sha256(Path(name).read_bytes()).hexdigest() != digest
+                     for name, digest in record['source_sha256'].items()):
+                  raise SystemExit('CI package source differs from the selected commit')
+              shutil.copy2(path, destination / path.name)
+          PY
+      - name: Check package contents and README rendering
+        run: |
+          python -m pip install twine
+          python scripts/check_distributions.py dist/*.whl dist/*.tar.gz --json release-audit/testpypi-archives.json
+          python -m twine check --strict dist/*
+      - name: Save distributions for the publishing job
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: testpypi-distributions
+          path: dist/
+          if-no-files-found: error
+      - name: Record the rehearsal result
+        env:
+          CI_RUN_ID: ${{ steps.ci.outputs.run_id }}
+          PUBLISH_REQUESTED: ${{ inputs.publish }}
+        run: |
+          {
+            echo '## TestPyPI preparation'
+            echo "Commit: $GITHUB_SHA"
+            echo "Verified CI run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${CI_RUN_ID}"
+            echo "Upload requested: $PUBLISH_REQUESTED"
+            echo 'Distributions are reused byte for byte from successful Package checks.'
+            echo 'With publish=false, this run validates artifacts without uploading a package.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Upload to TestPyPI
+    needs: verify
+    if: inputs.publish && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/SurfTracker
+    permissions:
+      id-token: write
+    steps:
+      - name: Download the verified distributions
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: testpypi-distributions
+          path: dist
+      - name: Publish using the TestPyPI Trusted Publisher
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          repository-url: https://test.pypi.org/legacy/
