@@ -41,7 +41,7 @@ named `swmtrack`; both names install the same import package and command.
 
 - A FreeSurfer subject directory with `mri/orig.mgz`, white/pial surfaces and
   the requested hemisphere's annotation (`aparc` by default).
-- A supplied 4D NIfTI WM FOD, including standard **MRtrix3** FODs, using the
+- A supplied 4D NIfTI WM FOD, including standard MRtrix3 FODs, using the
   supported real even-degree spherical-harmonic convention. Declare it with
   `--sh-basis legacy-real-even`; see the export example below. FOD estimation
   and DWI correction are outside this pipeline. Channel counts alone do not
@@ -60,10 +60,7 @@ WM FODs produced by MRtrix3 `dwi2fod csd` or `dwi2fod msmt_csd` use the
 supported SH basis: even degrees, ascending `m = -l ... l`, negative-`m` sine
 and positive-`m` cosine terms, with orthonormal scaling and the Condon–Shortley
 phase. Common channel counts are 6, 15, 28 and 45 for `lmax` 2, 4, 6 and 8.
-The existing option name `legacy-real-even` selects this compatible basis; it
-does not mean the older MRtrix 0.2 basis. See the
-[MRtrix3 SH convention](https://mrtrix.readthedocs.io/en/latest/concepts/spherical_harmonics.html)
-and [`dwi2fod` documentation](https://mrtrix.readthedocs.io/en/latest/reference/commands/dwi2fod.html).
+The existing option name `legacy-real-even` selects this compatible basis.
 
 SurfTracker reads NIfTI FODs (`.nii` or `.nii.gz`), not `.mif` files directly.
 Export the **WM FOD**, keeping all SH channels; for multi-tissue CSD, use the WM
@@ -79,22 +76,6 @@ swmtrack run --subject-dir /data/subject/freesurfer \
   --assume-scanner-aligned --sh-basis legacy-real-even \
   --gyrus-a precentral --gyrus-b postcentral
 ```
-
-An existing MRtrix3 NIfTI WM FOD can be supplied directly. Plain
-[`mrconvert`](https://mrtrix.readthedocs.io/en/latest/reference/commands/mrconvert.html)
-format conversion preserves the SH representation; it does not register the
-FOD to the anatomy. Older MRtrix 0.2 files and other SH bases need a verified
-basis conversion first. SurfTracker does not infer or convert an unknown basis.
-FOD amplitude scaling also affects the absolute `--min-fod` stopping threshold.
-
-The saved **101107 LH compatibility experiment** used MRtrix3 3.0.8 MSMT-CSD
-WM FODs (`lmax=8`, 45 channels), both raw and `mtnormalise` outputs. All 45 SH
-basis functions agreed with MRtrix3 `sh2amp` across 187 directions (maximum
-absolute error `5.70e-8`). Normalized-FOD tracking accepted 4,185 between-gyri
-and 424 within-precentral-mask tracks from 8,394 attempts each. This was a
-tracker compatibility test using existing surfaces/masks; see the
-[recorded validation scope](docs/validation.rst#mrtrix3-fod-compatibility)
-for its settings and limits.
 
 ### Orientation and physical coordinates
 
