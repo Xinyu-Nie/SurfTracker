@@ -270,7 +270,7 @@ convention; it does not require legacy software.
 
 ## Cite both methods
 
-Please cite **both** articles when using this pipeline. If you prepare the ROIs and WM surface by yourself, you can only cite 2:
+Please cite **both** articles when using this pipeline. If you prepare the ROIs and WM surface yourself, you can cite only 2: 
 
 1. Yonggang Shi, Paul M. Thompson, Ivo Dinov and Arthur W. Toga.
    *Hamilton-Jacobi Skeleton on Cortical Surfaces.* IEEE Transactions on Medical
