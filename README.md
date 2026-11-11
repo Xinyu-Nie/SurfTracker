@@ -44,8 +44,7 @@ named `swmtrack`; both names install the same import package and command.
 - A supplied 4D NIfTI WM FOD, including standard MRtrix3 FODs, using the
   supported real even-degree spherical-harmonic convention. Declare it with
   `--sh-basis legacy-real-even`; see the export example below. FOD estimation
-  and DWI correction are outside this pipeline. Channel counts alone do not
-  establish basis compatibility.
+  and DWI correction are outside this pipeline. 
 - Exactly one alignment choice: verified existing alignment using
   `--assume-scanner-aligned`, a forward physical RAS affine using
   `--scanner-to-world`, or optional ANTs rigid registration.
