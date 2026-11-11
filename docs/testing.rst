@@ -64,6 +64,6 @@ Prepared continuous integration
 
 The GitHub Actions workflow in .github/workflows/ci.yml runs the above artifact
 checks and strict Twine checks on each matrix environment, plus the synthetic
-tracking example. It does not upload to PyPI/TestPyPI. The intended matrix
-requires actual remote execution before claiming additional tested platforms.
+tracking example. It does not upload to PyPI/TestPyPI. The configured matrix
+provides compatibility evidence through its recorded GitHub job results.
 See publishing.rst for the publishing rehearsal and account setup.

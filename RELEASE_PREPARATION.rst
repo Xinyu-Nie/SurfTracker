@@ -43,7 +43,7 @@ Additional preparation in dev14
 Prepared build/artifact CI, an analytic synthetic tracking example, HCP S900
 data-sharing guidance and a TestPyPI/Trusted Publishing runbook. The holder
 remains unspecified; no active license or publisher workflow was added. The CI
-matrix needs remote execution, account/name/contact setup remains outstanding,
+matrix runs on PRs/main; PyPI account/contact setup remains outstanding,
 and a separate human-data example needs confirmed source-release provenance.
 See docs/example_data.rst and docs/publishing.rst.
 

@@ -21,10 +21,10 @@ Automated checks
 .github/workflows/ci.yml builds wheel/sdist, validates archive contents and
 strict README rendering, tests extracted source and installed wheels outside
 the checkout, rebuilds from the sdist, and runs the synthetic example. It uses
-read-only repository permissions and has no publishing step. Its intended
-matrix is Linux/Python 3.10--3.13 plus macOS/Windows on Python 3.12. These are
-planned CI targets, not completed platform validation: only locally executed
-results should be claimed until the workflow actually passes on GitHub.
+read-only repository permissions and has no publishing step. Its configured
+matrix is Linux/Python 3.10--3.13 plus macOS/Windows on Python 3.12. Inspect
+the current PR checks or repository Actions page for the exact run results.
+These synthetic/package checks do not replace scientific cohort validation.
 
 From a fresh environment::
 

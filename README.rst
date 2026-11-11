@@ -32,8 +32,9 @@ For this release-preparation source tree, install from this directory::
 For optional ANTs registration, install ``.[registration]`` from source
 (or ``SurfTracker[registration]`` after publication), or select a separate
 ANTsPy interpreter with ``--registration-python``. Linux/Python 3.12 is the
-currently tested environment; the pure-Python wheel tag is not evidence that
-all dependency/platform combinations have been tested.
+environment used for scientific cohort validation; GitHub Actions checks the
+configured compatibility matrix. The pure-Python wheel tag alone is not evidence
+that all dependency/platform combinations have been tested.
 
 Inputs
 ------
@@ -192,8 +193,7 @@ conditional HCP S900 redistribution and separate data-use terms. Human example
 data remain outside the Python distributions.
 
 The prepared GitHub Actions workflow checks build artifacts on a proposed
-Linux/Python 3.10--3.13 and macOS/Windows/Python 3.12 matrix. These jobs have not
-yet run remotely. ``docs/publishing.rst`` covers TestPyPI rehearsal and Trusted
+Linux/Python 3.10--3.13 and macOS/Windows/Python 3.12 matrix. See the repository Actions page for current results. ``docs/publishing.rst`` covers TestPyPI rehearsal and Trusted
 Publishing setup; no automatic publishing job is enabled.
 
 Repository layout

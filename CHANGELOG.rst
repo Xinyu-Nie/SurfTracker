@@ -10,6 +10,9 @@ Changes
   the current tree while retaining repository history.
 * Exclude legacy source and the existing example archive from Python packages.
 * Configure PR/main CI checks without enabling package publication.
+* Make rotation/native-interface fixtures portable across current SciPy and
+  operating systems; cap requested tracking workers to the available Numba pool
+  and record the effective count without changing seeded trajectories.
 
 0.3.0.dev15
 -----------

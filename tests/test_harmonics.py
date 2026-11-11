@@ -10,8 +10,8 @@ def test_rotation_matches_direct_world_evaluation():
         size = (degree+1)*(degree+2)//2
         coefficients = rng.normal(size=(7, size))
         frames = np.concatenate((Rotation.random(4, random_state=rng).as_matrix(),
-            np.eye(3)[None], Rotation.from_euler("y", [180], degrees=True).as_matrix(),
-            Rotation.from_euler("z", [60], degrees=True).as_matrix()))
+            np.eye(3)[None], Rotation.from_euler("y", 180, degrees=True).as_matrix()[None],
+            Rotation.from_euler("z", 60, degrees=True).as_matrix()[None]))
         points = rng.normal(size=(60, 3)); points /= np.linalg.norm(points, axis=1)[:, None]
         local = rotate_to_local(coefficients, frames, degree)
         for i in range(len(frames)):

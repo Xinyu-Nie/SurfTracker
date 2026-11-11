@@ -55,11 +55,16 @@ Seeding                            area-weighted, 20 attempts/mm2, RNG 42
 Tracking step / turn limit         0.5 mm / 14 degrees per mm
 Angular resolution / minimum FOD   2 degrees / 0.01
 Length range                       8--150 mm
-Tracking threads                   4
+Tracking threads                   4 (capped to Numba pool)
 Stop at endpoint targets           enabled for both constrained modes
 Additional registration            off unless explicitly selected
 ANTs fit when selected             rigid, Mattes MI, one thread, COM init
 ================================== =======================================
+
+The requested thread count is an upper bound: hosts with a smaller Numba pool
+use that pool limit. Tracking reports retain the requested count in config
+and record effective_threads and thread_pool_limit. This does not change seeded
+trajectory sampling or integration parameters.
 
 ``--preprocess-profile previous-defaults`` selects the older cotan/lumped/
 area-weighted/distance-skeleton baseline. ``recommended``, ``default`` and

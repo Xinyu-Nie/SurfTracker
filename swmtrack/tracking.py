@@ -225,9 +225,8 @@ def track(prepared, config=None):
     operations = np.zeros((len(seed_faces), 2), dtype=np.int64)
     streamlines, accepted_ids = [], []
     original_threads = numba.get_num_threads()
-    if config.threads > numba.config.NUMBA_NUM_THREADS:
-        raise ValueError("Requested worker count exceeds the Numba thread pool")
-    numba.set_num_threads(config.threads)
+    effective_threads = min(config.threads, numba.config.NUMBA_NUM_THREADS)
+    numba.set_num_threads(effective_threads)
     start = time.perf_counter(); batch_seconds = []
     try:
         for first in range(0, len(seed_faces), config.batch_size):
@@ -261,6 +260,7 @@ def track(prepared, config=None):
     if config.endpoint_policy == "within_gyrus":
         stop_names[1] = "gyrus"
     report = {"algorithm_version": ALGORITHM_VERSION, "package_version": __version__, "config": asdict(config), "stop_at_targets": bool(stop_at_targets),
+        "effective_threads": effective_threads, "thread_pool_limit": numba.config.NUMBA_NUM_THREADS,
         "attempts": len(seed_faces), "accepted": len(streamlines), "acceptance_rate": len(streamlines)/len(seed_faces),
         "tracking_seconds_including_JIT_if_cold": elapsed, "first_batch_seconds": batch_seconds[0],
         "remaining_batches_seconds": float(sum(batch_seconds[1:])),

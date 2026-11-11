@@ -118,6 +118,26 @@ def test_empty_tracks_are_valid():
     assert report['stop_counts']=={'no_supported_direction':8}
 
 
+def test_worker_pool_limit_preserves_seeded_paths(monkeypatch):
+    import numba
+    p = prepared_grid(8)
+    common = dict(n_seeds=40, min_length_mm=.1, max_length_mm=40.)
+    reference, _, _ = track(p, TrackingConfig(**common, threads=1))
+    original_threads = numba.get_num_threads()
+    try:
+        numba.set_num_threads(1)
+        with monkeypatch.context() as patch:
+            patch.setattr(numba.config, 'NUMBA_NUM_THREADS', 1)
+            paths, report, _ = track(p, TrackingConfig(**common, threads=4))
+    finally:
+        numba.set_num_threads(original_threads)
+    assert report['config']['threads'] == 4
+    assert report['effective_threads'] == report['thread_pool_limit'] == 1
+    assert len(paths) == len(reference) > 0
+    for actual, expected in zip(paths, reference):
+        np.testing.assert_array_equal(actual, expected)
+
+
 def test_area_seeds_follow_physical_area_and_uniform_barycentric_positions():
     points=np.array([[0.,0.,0.],[1.,0.,0.],[0.,1.,0.],[5.,0.,0.],[7.,0.,0.],[5.,2.,0.]])
     g=build_geometry(points,np.array([[0,1,2],[3,4,5]]))
