@@ -41,10 +41,11 @@ named `swmtrack`; both names install the same import package and command.
 
 - A FreeSurfer subject directory with `mri/orig.mgz`, white/pial surfaces and
   the requested hemisphere's annotation (`aparc` by default).
-- A supplied 4D NIfTI FOD using the supported real even-degree spherical
-  harmonic convention, explicitly declared with `--sh-basis legacy-real-even`.
-  FOD estimation and DWI correction are outside this pipeline. Channel counts
-  alone do not establish basis compatibility.
+- A supplied 4D NIfTI WM FOD, including standard **MRtrix3** FODs, using the
+  supported real even-degree spherical-harmonic convention. Declare it with
+  `--sh-basis legacy-real-even`; see the export example below. FOD estimation
+  and DWI correction are outside this pipeline. Channel counts alone do not
+  establish basis compatibility.
 - Exactly one alignment choice: verified existing alignment using
   `--assume-scanner-aligned`, a forward physical RAS affine using
   `--scanner-to-world`, or optional ANTs rigid registration.
@@ -52,6 +53,78 @@ named `swmtrack`; both names install the same import package and command.
 See [input conventions](docs/input_conventions.rst) and the
 [complete workflow and defaults](docs/end_to_end.rst). Image bounds and headers
 alone do not establish anatomical registration.
+
+### MRtrix3 FODs
+
+WM FODs produced by MRtrix3 `dwi2fod csd` or `dwi2fod msmt_csd` use the
+supported SH basis: even degrees, ascending `m = -l ... l`, negative-`m` sine
+and positive-`m` cosine terms, with orthonormal scaling and the Condon–Shortley
+phase. Common channel counts are 6, 15, 28 and 45 for `lmax` 2, 4, 6 and 8.
+The existing option name `legacy-real-even` selects this compatible basis; it
+does not mean the older MRtrix 0.2 basis. See the
+[MRtrix3 SH convention](https://mrtrix.readthedocs.io/en/latest/concepts/spherical_harmonics.html)
+and [`dwi2fod` documentation](https://mrtrix.readthedocs.io/en/latest/reference/commands/dwi2fod.html).
+
+SurfTracker reads NIfTI FODs (`.nii` or `.nii.gz`), not `.mif` files directly.
+Export the **WM FOD**, keeping all SH channels; for multi-tissue CSD, use the WM
+output rather than the GM/CSF maps:
+
+```bash
+# Format conversion with MRtrix3; no SH-basis conversion is needed.
+mrconvert wmfod.mif wmfod.nii.gz -datatype float32
+
+# Use --assume-scanner-aligned only after verifying anatomical alignment.
+swmtrack run --subject-dir /data/subject/freesurfer \
+  --fod wmfod.nii.gz --output-dir output/central \
+  --assume-scanner-aligned --sh-basis legacy-real-even \
+  --gyrus-a precentral --gyrus-b postcentral
+```
+
+An existing MRtrix3 NIfTI WM FOD can be supplied directly. Plain
+[`mrconvert`](https://mrtrix.readthedocs.io/en/latest/reference/commands/mrconvert.html)
+format conversion preserves the SH representation; it does not register the
+FOD to the anatomy. Older MRtrix 0.2 files and other SH bases need a verified
+basis conversion first. SurfTracker does not infer or convert an unknown basis.
+FOD amplitude scaling also affects the absolute `--min-fod` stopping threshold.
+
+The saved **101107 LH compatibility experiment** used MRtrix3 3.0.8 MSMT-CSD
+WM FODs (`lmax=8`, 45 channels), both raw and `mtnormalise` outputs. All 45 SH
+basis functions agreed with MRtrix3 `sh2amp` across 187 directions (maximum
+absolute error `5.70e-8`). Normalized-FOD tracking accepted 4,185 between-gyri
+and 424 within-precentral-mask tracks from 8,394 attempts each. This was a
+tracker compatibility test using existing surfaces/masks; see the
+[recorded validation scope](docs/validation.rst#mrtrix3-fod-compatibility)
+for its settings and limits.
+
+### Orientation and physical coordinates
+
+**No specific voxel storage orientation is required.** RAS-, LAS-, LPS-ordered
+and oblique NIfTI grids are sampled using the full header affine. SurfTracker
+works in physical **RAS+ millimeters** (right, anterior, superior), without
+resampling or rewriting the FOD into a canonical RAS voxel array.
+
+- **FreeSurfer surfaces:** the importer converts surface/tkregister RAS to
+  scanner RAS using `mri/orig.mgz`, then applies the selected scanner-to-FOD
+  transform. Keep the original FreeSurfer subject files together.
+- **Anatomical alignment:** use `--assume-scanner-aligned` only when scanner
+  RAS already aligns with FOD-world RAS; otherwise supply `--scanner-to-world`
+  (a forward 4×4 physical RAS point transform) or request `--register-ants`
+  with a b0/DWI reference in the FOD grid. RAS coordinates alone do not imply
+  that two datasets are anatomically registered.
+- **FOD directions:** standard MRtrix3 FOD directions use scanner/world RAS
+  axes, so normally omit `--sh-to-world` (identity). Voxel axis order does not
+  change that convention: do not apply the image-affine rotation a second time.
+  For externally generated coefficients in a different direction frame,
+  `--sh-to-world` accepts an orthogonal 3×3 matrix mapping those directions
+  into FOD-world RAS. This matrix does not convert the SH basis or register
+  the anatomy. See [MRtrix3 coordinates](https://mrtrix.readthedocs.io/en/latest/getting_started/image_data.html#coordinate-system).
+
+The pipeline transforms the surfaces into the supplied FOD space, keeping the
+FOD/SH image unchanged, including during optional ANTs registration. For a
+separately rotated or warped FOD image, use FOD-aware reorientation before
+tracking; editing a header or resampling coefficient channels as scalar images
+alone does not rotate the lobes. See
+[MRtrix3 FOD reorientation](https://mrtrix.readthedocs.io/en/latest/reference/commands/mrtransform.html).
 
 ## Between-gyri tracking
 

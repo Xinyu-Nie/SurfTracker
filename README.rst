@@ -48,6 +48,44 @@ Inputs
   a supplied physical RAS affine, or optional ANTs rigid registration using
   an appropriate b0/DWI reference. Headers alone do not establish registration.
 
+MRtrix3 FODs and orientation
+----------------------------
+
+Standard MRtrix3 WM FODs from dwi2fod csd or msmt_csd use the supported
+orthonormal real even-degree SH basis. Select --sh-basis legacy-real-even;
+this existing option name refers to the compatible basis, not the older
+MRtrix 0.2 normalization. Use the WM FOD rather than GM/CSF tissue maps.
+SurfTracker reads NIfTI, so export a .mif FOD with MRtrix3 first::
+
+    mrconvert wmfod.mif wmfod.nii.gz -datatype float32
+
+An existing MRtrix3 NIfTI FOD can be supplied directly. Keep all SH channels;
+format conversion does not register anatomy or change an incompatible SH basis.
+See the `MRtrix3 SH convention <https://mrtrix.readthedocs.io/en/latest/concepts/spherical_harmonics.html>`_
+and `mrconvert documentation <https://mrtrix.readthedocs.io/en/latest/reference/commands/mrconvert.html>`_.
+
+An existing 101107 LH experiment tested MRtrix3 3.0.8 MSMT-CSD WM FODs
+(lmax=8), raw and mtnormalise-normalized. All 45 basis functions matched
+MRtrix3 sh2amp on 187 directions (maximum absolute error 5.70e-8). Tracking
+and export checks passed using existing surfaces/masks; this was a separate
+tracker compatibility experiment. See docs/validation.rst for its exact scope.
+
+No particular voxel storage orientation is required. The full NIfTI affine
+supports RAS/LAS/LPS storage and oblique grids. Surface coordinates are converted
+from FreeSurfer surface RAS via orig.mgz to scanner RAS and then into FOD-world
+RAS using the declared alignment. Physical output coordinates are RAS+ mm;
+the FOD image is not resampled into a canonical RAS voxel array.
+
+Standard MRtrix3 FOD directions use scanner/world RAS, so normally omit
+--sh-to-world (identity), regardless of voxel storage order. This separate
+orthogonal 3x3 matrix is only needed for a known different SH direction frame;
+it does not convert a basis or register anatomy. Matching orientation labels
+are not anatomical registration: choose verified --assume-scanner-aligned,
+--scanner-to-world or optional --register-ants. Registration moves surfaces
+into FOD space and leaves the FOD unchanged. A separately rotated/warped FOD
+requires appropriate FOD reorientation. See docs/input_conventions.rst and the
+`MRtrix3 coordinate convention <https://mrtrix.readthedocs.io/en/latest/getting_started/image_data.html#coordinate-system>`_.
+
 Tracking examples
 -----------------
 

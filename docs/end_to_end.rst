@@ -23,7 +23,12 @@ Required inputs
 * A 4D NIfTI FOD coefficient image with the declared real even-degree SH
   convention, selected with ``--sh-basis legacy-real-even``. FOD estimation
   from raw DWI is not performed. ``--sh-to-world`` supplies a separate SH
-  direction transform if its axes differ from physical world RAS.
+  direction transform if its axes differ from physical world RAS. Standard
+  MRtrix3 WM FODs use the supported basis and world RAS directions; export .mif
+  to NIfTI with mrconvert and normally leave --sh-to-world at identity.
+  No particular voxel storage orientation is required: the full image affine
+  handles axis permutations/flips and oblique grids without resampling the FOD.
+  See input_conventions.rst for basis and orientation details.
 * ROI names or packed annotation IDs for targeted modes, individually or as
   explicit lists. Whole-hemisphere mode selects all cortical parcels.
   The original annotation is preserved; a union is a separate binary mask.

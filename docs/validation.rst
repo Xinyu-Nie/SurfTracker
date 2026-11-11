@@ -16,7 +16,9 @@ superior/middle temporal and merged whole-parietal tracking were evaluated in
 projection cache was supplied. All 24 runs were nonempty and passed numerical
 export/endpoint checks. Accepted totals were 185,445 central, 50,692 temporal
 and 802,044 whole-parietal trajectories. These runs reproduced the frozen
-recommended-configuration trajectory coordinates exactly.
+recommended-configuration trajectory coordinates exactly. The targeted and
+whole-hemisphere cohorts used the group-supplied Order16 FOD model; native
+MRtrix3 FOD compatibility was evaluated separately below.
 
 Whole-hemisphere tests
 ----------------------
@@ -55,6 +57,43 @@ per selection; full VTKs retain all accepted paths. Tract counts, spatial overla
 proxies and numerical checks do not establish anatomical correctness, complete
 sulcal coverage, biological sensitivity or accuracy of individual U-fibers.
 Expert review and appropriately scoped claims remain necessary for interpretation.
+
+MRtrix3 FOD compatibility
+-------------------------
+
+The saved 101107 left-hemisphere experiment used MRtrix3 3.0.8, Dhollander
+responses, MSMT-CSD lmax=8 (45 WM SH coefficients), and both raw and mtnormalise-
+normalized WM FODs. This historical tracker test used package 0.2.0 and existing
+surface/seed/endpoint masks, with no additional registration or surface fitting.
+It was not a fresh FreeSurfer-to-segmentation run with current seed defaults.
+The within-precentral case used the supplied precentral endpoint mask rather
+than the full annotation parcel.
+
+MRtrix3 sh2amp independently evaluated every basis function on 187 directions.
+The maximum absolute basis-amplitude difference was 5.70e-8; no coefficient
+conversion or SH direction transform was required (scanner/world RAS axes).
+The current Python basis was also compared against those saved MRtrix3
+amplitudes when preparing this documentation and reproduced that error.
+Independent world-space polar projection on 64 faces had relative L2 error
+2.77e-8. One- and four-thread between-gyri runs produced identical trajectories.
+CLI/API tracking and independent TCK/TRK readback checks passed.
+
+Each case below used 8,394 attempts, RNG 42, 0.5-mm inward offset and step,
+14 degrees/mm turning limit, minimum FOD 0.01, and length range 8--150 mm::
+
+    WM FOD       Endpoint requirement       Accepted
+    normalized   between gyri                  4,185
+    raw          between gyri                  4,057
+    normalized   within precentral mask          424
+
+The original group-supplied lmax=16 FOD accepted 2,389 between-gyri tracks with
+the same geometry/masks and attempts. These models have different angular order
+and amplitude scales; equal counts are not a compatibility criterion. The
+absolute min_fod threshold is not calibrated across all FOD models by this test.
+These results establish tested numerical compatibility, not anatomical accuracy
+or full-cohort validation of native MRtrix3 FODs. Source reports and data remain
+in the research workspace under results/101107_mrtrix3/; no human images or
+tractograms are redistributed with the package.
 
 Portable packaging tests
 -------------------------
