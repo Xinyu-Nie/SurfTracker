@@ -41,7 +41,7 @@ Current recommended defaults
 ================================== =======================================
 Stage / parameter                  Default
 ================================== =======================================
-Backend                            Independent Python; no legacy executables
+Backend                            Independent Python
 Workflow preprocessing profile     recommended (agreement-candidate alias)
 Geometry and feature smoothing     0.5, consistent FEM mass for both
 Curvature                          implicit-grid; no coordinate rounding
