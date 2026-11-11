@@ -6,13 +6,10 @@ uses orig.mgz to convert surface RAS to scanner RAS and then applies the declare
 scanner-to-FOD point transform. Supply exactly one of verified existing scanner
 alignment, an explicit forward RAS 4x4 affine, or optional ANTs rigid fitting.
 All surface points, tracking lengths, steps and offsets use physical millimeters.
-Source vertex identities and original packed annotation IDs are retained.
+
 
 No particular voxel storage order is required. RAS/LAS/LPS and oblique NIfTI
-grids are sampled through their full voxel-to-world affine. The FOD is not
-rewritten or resampled into a canonical RAS voxel array. RAS+ describes the
-physical coordinate frame; it does not imply that anatomy and FOD are registered.
-For prepare/track with an externally supplied VTK, its points must already be
+grids are sampled through their full voxel-to-world affine. For prepare/track with an externally supplied VTK, its points must already be
 in the FOD's physical world RAS mm; that route does not run the FreeSurfer importer.
 
 Supported SH channels are even l, with m=-l..l in ascending order. The real basis
@@ -30,16 +27,13 @@ older MRtrix 0.2 normalization. Export .mif to a 4D NIfTI with all SH channels::
     mrconvert wmfod.mif wmfod.nii.gz -datatype float32
 
 .mif is not read directly by SurfTracker. Use the WM FOD, not GM/CSF maps.
-An existing MRtrix3 NIfTI FOD can be used directly. Format conversion does not
-change the basis or perform registration. See the
-`MRtrix3 SH specification <https://mrtrix.readthedocs.io/en/latest/concepts/spherical_harmonics.html>`_.
+An existing MRtrix3 NIfTI FOD can be used directly. 
 
 Standard MRtrix3 FOD directions are expressed in scanner/world RAS. Leave
 --sh-to-world at identity even when voxel axes are not RAS-ordered; the spatial
 NIfTI affine is not an additional SH direction rotation. For a known different
 frame, this orthogonal matrix maps a coefficient-frame direction to FOD-world
-RAS. It does not convert between SH bases or align the anatomy. See
-`MRtrix3 coordinates <https://mrtrix.readthedocs.io/en/latest/getting_started/image_data.html#coordinate-system>`_.
+RAS. 
 
 If an FOD is separately rotated or warped, the lobes must also be reoriented
 with an FOD-aware tool. Changing headers or scalar resampling alone is not
