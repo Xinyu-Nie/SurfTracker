@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "SurfTracker"
-version = "0.3.0.dev16"
+version = "0.3.0.dev17"
 description = "World-space superficial white matter surface tractography"
 authors = [{name = "Xinyu Nie"}, {name = "Yonggang Shi"}]
 maintainers = [{name = "Xinyu Nie"}]

@@ -26,6 +26,9 @@ an intraparietal basin automatically.
 No-config workflows use PreprocessConfig.recommended(). The bare constructor
 PreprocessConfig() preserves the historical explicit cotan baseline. CLI profile
 overrides are explicit. All grid/mass/energy/HJ settings and input hashes are
-recorded in pipeline metadata. Alternative methods and the optional external
-legacy backend are available for explicit comparisons; external kernels are
-not distributed with this package.
+recorded in pipeline metadata. Alternative independently implemented Python
+methods remain available for explicit comparisons. Historical implementations
+are kept on the legacy and dev-c++ branches; the Python package does not invoke
+their executable kernels. The legacy-native backend and --tools-json option
+have been removed. The legacy-real-even FOD convention identifier and existing
+Python algorithm/seed-policy names are retained without changing their math.

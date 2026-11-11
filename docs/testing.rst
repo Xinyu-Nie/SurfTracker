@@ -4,8 +4,9 @@ Portable tests and artifact verification
 The default tests/ suite contains runtime, geometry, SH projection, segmentation,
 seed-policy, registration-interface, checkpoint, endpoint, I/O and helper tests.
 Fixtures are constructed locally from synthetic meshes/images/annotations.
-Two legacy-payload checks skip when the separately supplied optional payload is
-absent. Default Python operation does not require that payload.
+The suite does not depend on historical executables. It verifies that Python
+preprocessing runs when external process execution is forbidden and that the
+removed native backend/options are rejected.
 
 Historical algorithm experiments and their tests remain in the original
 research workspace. They are not silently skipped by an import guard or shipped
@@ -46,8 +47,8 @@ Automated offline artifact check
 With runtime/test/build dependencies already installed::
 
     python scripts/verify_artifacts.py \
-        --wheel dist/surftracker-0.3.0.dev16-py3-none-any.whl \
-        --sdist dist/surftracker-0.3.0.dev16.tar.gz \
+        --wheel dist/surftracker-0.3.0.dev17-py3-none-any.whl \
+        --sdist dist/surftracker-0.3.0.dev17.tar.gz \
         --output-dir release-audit/artifact-tests
 
 This extracts the archive safely to a fresh temporary directory, runs its tests,

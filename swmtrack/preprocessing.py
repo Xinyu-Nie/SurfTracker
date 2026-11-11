@@ -1,23 +1,17 @@
 """Sulcal/gyral preprocessing and the group's patch-selection workflow.
 
 The default Python backend is an independent implementation of mesh methods.
-The optional legacy-native backend requires separately supplied executables.
 """
 
 from dataclasses import dataclass, asdict
 from pathlib import Path
 import json
-import subprocess
 import time
 import numpy as np
 from scipy import sparse
 from scipy.sparse import csgraph
-from scipy.sparse.linalg import splu
-from scipy.io import savemat
 from numba import njit
 from .io import read_surface, write_surface, sha256
-from .geometry import vertex_normals
-from .native import resolve_tools, check_native
 
 
 @dataclass
@@ -78,16 +72,14 @@ class PreprocessConfig:
         return cls(**options)
 
     def validate(self):
-        if self.backend not in ("python","legacy-native"):
-            raise ValueError("backend must be python or legacy-native")
+        if self.backend != "python":
+            raise ValueError("Only the independent Python backend is supported")
         if self.curvature_method not in ("cotan", "quadric", "implicit-grid"):
             raise ValueError("curvature_method must be cotan, quadric, or implicit-grid")
         if self.smoothing_mass not in ("lumped", "consistent"):
             raise ValueError("smoothing_mass must be lumped or consistent")
         if self.segmentation_energy not in ("area-weighted", "robust-unit"):
             raise ValueError("segmentation_energy must be area-weighted or robust-unit")
-        if self.backend == "legacy-native" and (self.smoothing_mass != "lumped" or self.segmentation_energy != "area-weighted"):
-            raise ValueError("smoothing_mass and segmentation_energy apply only to the Python backend")
         if self.skeleton_method not in ("distance", "hj-flux"):
             raise ValueError("skeleton_method must be distance or hj-flux")
         if self.skeleton_relabeling not in ("none", "pruned-branches"):
@@ -96,10 +88,6 @@ class PreprocessConfig:
             raise ValueError("hj_endpoint_flux_percentile must lie in [0, 100]")
         if self.reconstruction_max_unsupported_area_mm2 <= 0:
             raise ValueError("reconstruction_max_unsupported_area_mm2 must be positive")
-        if self.backend == "legacy-native" and self.curvature_method != "cotan":
-            raise ValueError("curvature_method applies only to the Python backend")
-        if self.backend == "legacy-native" and (self.skeleton_method != "distance" or self.skeleton_relabeling != "none"):
-            raise ValueError("skeleton_method and skeleton_relabeling apply only to the Python backend")
         if not np.isfinite([v for v in asdict(self).values() if isinstance(v,(float,int))]).all():
             raise ValueError("Preprocessing parameters must be finite")
         if self.branch_merge not in ("legacy","connected"):
@@ -130,22 +118,22 @@ class PreprocessConfig:
             raise ValueError("max_flux_pruning_iterations must be nonnegative")
 
 
-def write_mni_obj(path, points, faces, *, legacy_rounding=False):
-    """Internal native-tool interchange only; public geometry remains VTK/RAS mm."""
+def write_mni_obj(path, points, faces):
+    """Write an MNI polygon surface without rounding its coordinates."""
     points, faces = np.asarray(points), np.asarray(faces)
     tri = points[faces]
     normal = np.cross(tri[:,1]-tri[:,0], tri[:,2]-tri[:,0])
     normals = np.zeros_like(points, dtype=float)
     for corner in range(3):
         np.add.at(normals, faces[:,corner], normal)
-    denominator = np.linalg.norm(normals, axis=1)+(1e-6 if legacy_rounding else 0)
+    denominator = np.linalg.norm(normals, axis=1)
     if np.any(denominator == 0):
         raise ValueError("Cannot write normals at isolated vertices")
     normals /= denominator[:,None]
     with Path(path).open("w") as stream:
         stream.write(f"P 0.3 0.7 0.5 100 1 {len(points)}\n")
-        np.savetxt(stream, points, fmt="%.2f" if legacy_rounding else "%.17g")
-        np.savetxt(stream, normals, fmt="%.2f" if legacy_rounding else "%.17g")
+        np.savetxt(stream, points, fmt="%.17g")
+        np.savetxt(stream, normals, fmt="%.17g")
         stream.write(f"{len(faces)}\n0 1 1 1 1\n")
         np.savetxt(stream, (3*np.arange(1,len(faces)+1))[:,None], fmt="%d")
         np.savetxt(stream, faces, fmt="%d")
@@ -233,19 +221,6 @@ def intersection_seed_domains(atlas, segmentation, graph, labels_a, labels_b):
         "components":[{"id":i,"vertices":int(sizes[i]),"retained":bool(i in retained)}
                       for i in range(1,len(sizes))]}
     return raw,connected,boundary,component,details
-
-
-def label_gaussians(feature, fraction):
-    """MATLAB quantile (Hazen), sample variance, and six-decimal text interface."""
-    x=np.asarray(feature,dtype=np.float64)
-    low,high=np.quantile(x,[fraction,(1+fraction)/2],method="hazen")
-    groups=(x[(x>low)&(x<high)],x[x>high])
-    parameters=[]
-    for group in groups:
-        if len(group)<2 or np.var(group,ddof=1)<=0:
-            raise ValueError("Cannot estimate two nondegenerate feature classes")
-        parameters.append([.5,float(group.mean()),float(group.var(ddof=1))])
-    return np.array(parameters)
 
 
 def branch_map(branches,n):
@@ -366,86 +341,6 @@ def validate_full_surface(points,faces):
         raise ValueError("Surface face winding is inconsistent")
 
 
-class LegacyNative:
-    def __init__(self, directory, overrides=None):
-        self.directory=Path(directory).resolve();self.directory.mkdir(parents=True,exist_ok=True)
-        self.tools=resolve_tools(overrides)
-        self.overrides=overrides
-        self.checked=False
-        history=self.directory/"native_calls.json"
-        self.calls=json.loads(history.read_text()) if history.exists() else []
-
-    def run(self, tool, *arguments):
-        if not self.checked:
-            check_native(self.overrides)
-            self.checked=True
-        executable=self.tools[tool]
-        if not executable.is_file():
-            raise FileNotFoundError(f"Missing legacy-native kernel {tool}: {executable}; supply tool overrides")
-        log=self.directory/f"{len(self.calls):02d}_{tool}.log"
-        command=[str(executable),*[str(v) for v in arguments]]
-        started=time.perf_counter()
-        with log.open("w") as stream:
-            subprocess.run(command,cwd=self.directory,stdout=stream,stderr=subprocess.STDOUT,check=True)
-        self.calls.append({"tool":tool,"command":command,"seconds":time.perf_counter()-started,"log":str(log)})
-        (self.directory/"native_calls.json").write_text(json.dumps(self.calls,indent=2)+"\n")
-
-    def distance(self, mesh, mask, name):
-        mask=np.asarray(mask,dtype=bool)
-        if not mask.any():
-            return np.full(len(mask),np.inf)
-        source=self.directory/f"{name}.raw";destination=self.directory/f"{name}_distance.raw"
-        mask.astype("<i4").tofile(source)
-        self.run("GeoDist",mesh,source,destination)
-        return read_raw(destination,"<f4",len(mask)).astype(float)
-
-    def skeleton(self, mesh, segmentation, region, prefix):
-        source=self.directory/f"{prefix}_seg.raw";destination=self.directory/f"{prefix}.raw"
-        np.asarray(segmentation,dtype="<i4").tofile(source)
-        selected=(np.asarray(segmentation)==(0 if region==1 else 1))
-        if not selected.any() or selected.all():
-            return np.zeros(len(selected),dtype=np.int32),np.zeros(len(selected),dtype=np.float32)
-        self.run("CortexSkeleton",mesh,source,region,.1,destination)
-        values=read_raw(destination,"<i4",len(selected))
-        flux=read_raw(self.directory/"flux.raw","<f4",len(selected))
-        flux.tofile(self.directory/f"{prefix}_flux.raw")
-        return values,flux
-
-    def prune(self, mesh, skeleton, threshold, prefix):
-        if not np.any(skeleton):
-            return []
-        source=self.directory/f"{prefix}_skeleton.raw";graph=self.directory/f"{prefix}_graph.raw";pruned=self.directory/f"{prefix}_pruned.raw"
-        np.asarray(skeleton,dtype="<i4").tofile(source)
-        self.run("SkeletonBranchExtraction",mesh,source,graph)
-        self.run("SkeletonPruning",mesh,graph,threshold,0,pruned)
-        return read_branches(pruned,len(skeleton))
-
-
-def feature_k1(points,faces,backend,config):
-    """Original implicit curvature kernel plus Python Tikhonov sparse solves."""
-    mesh=backend.directory/"input.obj";write_mni_obj(mesh,points,faces)
-    qfile,kfile=backend.directory/"Q.raw",backend.directory/"K.raw"
-    backend.run("MeshLaplaceBeltramiEigen",mesh,qfile,kfile)
-    matrices=[]
-    for path in (qfile,kfile):
-        data=read_raw(path,"<f8").reshape(-1,3)
-        matrices.append(sparse.coo_matrix((data[:,2],(data[:,0].astype(int),data[:,1].astype(int))),shape=(len(points),len(points))).tocsc())
-    q,k=matrices
-    smoothed=splu(k+config.mesh_smoothing*q).solve(k@points)
-    smooth_obj=backend.directory/"smoothed_legacy_rounded.obj"
-    write_mni_obj(smooth_obj,smoothed,faces,legacy_rounding=True)
-    grid=backend.directory/"smoothed.dtg"
-    backend.run("Mesh2DTGrid",smooth_obj,1,4,grid)
-    curvature,mc,gc=[backend.directory/name for name in ("curvature.raw","mean_curvature.raw","gaussian_curvature.raw")]
-    backend.run("ImplicitCurvatureEstimation",grid,smooth_obj,curvature,mc,gc,0)
-    mean=read_raw(mc,"<f4",len(points)).astype(float);gauss=read_raw(gc,"<f4",len(points)).astype(float)
-    raw=mean+np.sqrt(np.maximum(mean*mean-gauss,0))
-    result=splu(k+config.feature_smoothing*q).solve(k@raw).astype(np.float32)
-    result.tofile(backend.directory/"k1.raw")
-    np.savez_compressed(backend.directory/"feature_intermediates.npz",smoothed=smoothed,mean_curvature=mean,gaussian_curvature=gauss,k1_unfiltered=raw,k1=result)
-    return result
-
-
 def reconstruct_regions(segmentation,sulcal_branches,gyral_branches,graph,valid=None,
                         vertex_area=None,max_unsupported_area_mm2=None):
     """Port ReconSulcalGyralRegionFromPruning's component-based region growing."""
@@ -478,53 +373,6 @@ def reconstruct_regions(segmentation,sulcal_branches,gyral_branches,graph,valid=
             preserve=(component>0)&(size[component]>max_unsupported_area_mm2)&initial_mask
             labels[preserve]=value
     return labels
-
-
-def segment_sulci(points,faces,atlas,feature,backend,config):
-    n=len(points);graph=adjacency(faces,n);ring2=expand_ring(graph)
-    mesh=backend.directory/"input.obj"
-    if not mesh.exists(): write_mni_obj(mesh,points,faces)
-    feature_path=backend.directory/"k1.raw";np.asarray(feature,dtype="<f4").tofile(feature_path)
-    parameters=label_gaussians(feature,config.deep_sulci_fraction)
-    parameter_path=backend.directory/"k1_gaussians.txt"
-    parameter_path.write_text("".join("1\n"+"\n".join(f"{v:.6f}" for v in row)+"\n" for row in parameters))
-    initial_path=backend.directory/"initial_segmentation.raw"
-    backend.run("MeshSegmentation",mesh,feature_path,parameter_path,1,1,initial_path)
-    initial=read_raw(initial_path,"<i4",n)
-    gyral,_=backend.skeleton(mesh,initial,1,"initial_gyral")
-    gyral_branches=backend.prune(mesh,gyral,config.gyral_pruning_mm,"initial_gyral")
-    retained=branch_map(gyral_branches,n)>0
-    removed=(~retained)&(gyral>0)
-    da=backend.distance(mesh,removed,"removed_gyral")
-    db=backend.distance(mesh,retained,"retained_gyral")
-    cleaned=initial.copy();cleaned[(initial==0)&(da<db)&(db>5)]=1
-    gyral,_=backend.skeleton(mesh,cleaned,1,"cleaned_gyral")
-    sulcal,_=backend.skeleton(mesh,cleaned,0,"cleaned_sulcal")
-    gb=backend.prune(mesh,gyral,10,"cleaned_gyral")
-    sb=backend.prune(mesh,sulcal,10,"cleaned_sulcal")
-    segmentation=reconstruct_regions(cleaned,sb,gb,graph)
-    if np.all(segmentation==0) or np.all(segmentation==1):
-        raise ValueError("Reconstructed sulcal/gyral segmentation has only one class; review features and pruning thresholds")
-    d_sulcal=backend.distance(mesh,segmentation==1,"sulcal_region")
-    d_gyral=backend.distance(mesh,segmentation==0,"gyral_region")
-    depth=np.where(segmentation==0,-d_sulcal,d_gyral)
-    sulcal,flux=backend.skeleton(mesh,segmentation,0,"final_sulcal")
-    invalid=np.asarray(atlas)==0
-    excluded=invalid|np.asarray(ring2@invalid.astype(np.int32)).ravel().astype(bool)
-    sulcal[excluded]=0
-    branches=backend.prune(mesh,sulcal,config.sulcal_pruning_mm,"final_sulcal")
-    before=[b.copy() for b in branches]
-    branches,history=flux_prune(branches,flux,ring2,config.flux_count_threshold,config.max_flux_pruning_iterations,config.branch_merge)
-    segmentation.astype("<i4").tofile(backend.directory/"segmentation.raw")
-    depth.astype("<f4").tofile(backend.directory/"signed_depth.raw")
-    write_branches(backend.directory/"sulcal_branches.raw",branches)
-    cells=np.empty((1,len(branches)),dtype=object)
-    for i,b in enumerate(branches):cells[0,i]=b[:,None]
-    savemat(backend.directory/"sulcal_branches.mat",{"BranchSet":cells})
-    (backend.directory/"flux_pruning.json").write_text(json.dumps(history,indent=2)+"\n")
-    return {"feature":feature,"initial":initial,"cleaned":cleaned,"segmentation":segmentation,"depth":depth,
-            "flux":flux,"sulcal_skeleton":sulcal,"gyral_skeleton":gyral,"branches":branches,
-            "pre_flux_branches":before,"graph":graph,"ring2":ring2,"gaussians":parameters,"flux_history":history}
 
 
 def make_patches(points,faces,atlas,segmentation,branches,graph,ring2,backend,config,labels_a,labels_b=None):
@@ -575,7 +423,7 @@ def make_patches(points,faces,atlas,segmentation,branches,graph,ring2,backend,co
 
 
 def preprocess(surface,output_dir,*,config=None,labels_a=(14423100,),labels_b=(1316060,),
-               atlas_array="aparc",tool_overrides=None,input_feature=None,stop_after="patches",reuse_segmentation=None,
+               atlas_array="aparc",input_feature=None,stop_after="patches",reuse_segmentation=None,
                whole_hemisphere=False):
     config=config or PreprocessConfig.recommended();config.validate()
     if whole_hemisphere and (labels_b is not None or config.within_gyrus_seed_policy!="intersection"):
@@ -598,26 +446,21 @@ def preprocess(surface,output_dir,*,config=None,labels_a=(14423100,),labels_b=(1
             raise ValueError("Anatomical labels within each group must be distinct")
         if labels_b is not None and (not len(labels_b) or np.intersect1d(labels_a,labels_b).size):
             raise ValueError("Between-gyrus label groups must be nonempty and disjoint")
-    if config.backend=="python":
-        if tool_overrides:raise ValueError("Tool overrides apply only to legacy-native preprocessing")
-        from .open_preprocessing import PythonBackend,curvature_feature,curvature_feature_options,segment as python_segment,METHOD_VERSION
-        backend=PythonBackend(output/"intermediates",points,faces)
-    else:
-        backend=LegacyNative(output/"intermediates",tool_overrides)
-        mesh=backend.directory/"input.obj";write_mni_obj(mesh,points,faces)
+    from .open_preprocessing import PythonBackend,curvature_feature,curvature_feature_options,segment as python_segment,METHOD_VERSION
+    backend=PythonBackend(output/"intermediates",points,faces)
     cached=None
     if reuse_segmentation is not None:
         if input_feature is not None:raise ValueError("Choose an input feature or a segmentation cache, not both")
         cache=Path(reuse_segmentation).resolve()
         if cache==output:raise ValueError("Write new patch selections to a separate output directory")
         parent=json.loads((cache/"preprocessing.json").read_text())
-        if config.backend=="python" and parent.get("method_version")!=METHOD_VERSION:
+        if parent.get("method_version")!=METHOD_VERSION:
             raise ValueError("Segmentation cache method version differs; recompute preprocessing with the current Python backend")
         if parent["surface_sha256"]!=sha256(surface) or parent["atlas_array"]!=atlas_array:
             raise ValueError("Segmentation cache belongs to a different surface or atlas")
         patch_fields={"branch_include_fraction","patch_include_fraction","min_patch_branch_vertices","branch_merge",
                       "between_gyri_seed_policy","within_gyrus_seed_policy"}
-        previous_config=asdict(PreprocessConfig(backend="legacy-native"));previous_config.update(parent["config"])
+        previous_config=asdict(PreprocessConfig());previous_config.update(parent["config"])
         if any(previous_config[key]!=value for key,value in asdict(config).items() if key not in patch_fields):
             raise ValueError("Segmentation parameters differ from the supplied cache")
         with np.load(cache/"segmentation.npz",allow_pickle=False) as stored:
@@ -627,13 +470,7 @@ def preprocess(surface,output_dir,*,config=None,labels_a=(14423100,),labels_b=(1
         cached["branches"]=read_branches(cache/"intermediates/sulcal_branches.raw",len(points))
         cached["graph"]=adjacency(faces,len(points));cached["ring2"]=expand_ring(cached["graph"])
         cached["flux_history"]=json.loads((cache/"intermediates/flux_pruning.json").read_text())
-        before=cache/"pre_flux_branches.raw"
-        if not before.exists():before=cache/"intermediates/final_sulcal_pruned.raw"
-        if before.exists() and config.backend=="legacy-native":
-            cached["pre_flux_branches"]=read_branches(before,len(points))
-            cached["branches"],cached["flux_history"]=flux_prune(cached["pre_flux_branches"],cached["flux"],cached["ring2"],
-                config.flux_count_threshold,config.max_flux_pruning_iterations,config.branch_merge)
-        elif parent["config"].get("branch_merge","legacy")!=config.branch_merge:
+        if parent["config"].get("branch_merge","legacy")!=config.branch_merge:
             raise ValueError("This cache lacks pre-flux branch data; reuse the original segmentation cache")
         feature=cached["feature"]
         write_branches(backend.directory/"sulcal_branches.raw",cached["branches"])
@@ -641,7 +478,7 @@ def preprocess(surface,output_dir,*,config=None,labels_a=(14423100,),labels_b=(1
         np.asarray(feature,dtype="<f4").tofile(backend.directory/"k1.raw")
     else:
         if input_feature is not None:feature=read_raw(input_feature,"<f4",len(points))
-        elif config.backend=="python":
+        else:
             if config.curvature_method == "cotan":
                 feature,intermediates=curvature_feature(points,faces,config.mesh_smoothing,config.feature_smoothing,
                                                       smoothing_mass=config.smoothing_mass)
@@ -649,29 +486,24 @@ def preprocess(surface,output_dir,*,config=None,labels_a=(14423100,),labels_b=(1
                 feature,intermediates,estimator_details=curvature_feature_options(points,faces,config)
                 (backend.directory/"curvature_estimator.json").write_text(json.dumps(estimator_details,indent=2)+"\n")
             np.savez_compressed(backend.directory/"feature_intermediates.npz",**intermediates)
-        else:feature=feature_k1(points,faces,backend,config)
         np.asarray(feature,dtype="<f4").tofile(backend.directory/"k1.raw")
     arrays={**data,"k1":feature};result={"feature":feature}
     metadata={"surface":str(Path(surface).resolve()),"surface_sha256":sha256(surface),"backend":config.backend,
               "coordinate_system":"RAS+ mm","config":asdict(config),"atlas_array":atlas_array,
               "labels_a":list(labels_a),"labels_b":list(labels_b) if labels_b is not None else None,
-              "scope":"MATLAB-free orchestration with packaged original native kernels",
-              "curvature_geometry":"Tikhonov-smoothed and rounded to 0.01 mm only for legacy implicit curvature; tracking surface remains unchanged",
-              "endpoint_definition":"annotation region intersected with reconstructed gyral class, excluding accepted seed patches",
-              "legacy_flux_score":"mean flux times branch vertex count; remove-before-threshold-test order retained"}
+              "endpoint_definition":"annotation region intersected with reconstructed gyral class, excluding accepted seed patches"}
     if input_feature is not None:
         metadata["input_feature"]={"path":str(Path(input_feature).resolve()),"sha256":sha256(input_feature)}
     if reuse_segmentation is not None:
         metadata["reused_segmentation"]={"directory":str(cache),"parent_metadata_sha256":sha256(cache/"preprocessing.json")}
     if stop_after!="features":
-        result=cached if cached is not None else (python_segment(points,faces,atlas,feature,backend,config)
-            if config.backend=="python" else segment_sulci(points,faces,atlas,feature,backend,config))
+        result=cached if cached is not None else python_segment(points,faces,atlas,feature,backend,config)
         if "pre_flux_branches" in result:
             write_branches(output/"pre_flux_branches.raw",result["pre_flux_branches"])
         arrays.update({"sulcal_segmentation":result["segmentation"],"signed_sulcal_depth_mm":result["depth"],
                        "sulcal_skeleton":result["sulcal_skeleton"],"gyral_skeleton":result["gyral_skeleton"],
                        "sulcal_flux":result["flux"],"sulcal_branch_id":branch_map(result["branches"],len(points))})
-        if config.backend=="python" and config.skeleton_method!="hj-flux":arrays.pop("sulcal_flux",None)
+        if config.skeleton_method!="hj-flux":arrays.pop("sulcal_flux",None)
         np.savez_compressed(output/"segmentation.npz",**{k:result[k] for k in ("feature","initial","cleaned","segmentation","depth","flux","sulcal_skeleton","gyral_skeleton")})
         if stop_after=="patches":
             # These arrays belong to this selection; do not carry an earlier
@@ -739,22 +571,21 @@ def preprocess(surface,output_dir,*,config=None,labels_a=(14423100,),labels_b=(1
     write_surface(output/"preprocessed.world.vtk",points,faces,arrays)
     metadata["native_tools"]={name:{"path":str(path),"sha256":sha256(path)} for name,path in backend.tools.items() if any(c["tool"]==name for c in backend.calls)}
     metadata["native_calls"]=backend.calls;metadata["elapsed_seconds"]=time.perf_counter()-started
-    if config.backend=="python":
-        metadata.update(scope="Independent mesh preprocessing using NumPy/SciPy/Numba; no legacy executable calls",
-            method_version=METHOD_VERSION,curvature_geometry={
-                "cotan":"Cotangent mean curvature and angle-defect Gaussian curvature on smoothed mesh",
-                "quadric":"Geodesic-neighborhood quadric fit on smoothed mesh",
-                "implicit-grid":"Signed-distance grid and tangent-plane shape operator from smoothed mesh"}[
-                    config.curvature_method]+"; tracking geometry unchanged",
-            feature_definition="smoothed minimum concave-positive principal curvature H-sqrt(max(H^2-K,0)); negative of largest convex-positive principal curvature",
-            legacy_flux_score=None,legacy_only_parameters=["branch_merge","deep_sulci_fraction","flux_count_threshold","max_flux_pruning_iterations"],
-            distances="Mesh-edge shortest paths in mm",skeleton=(
-                "One-ring average-flux priority and simple-point thinning with physical leaf pruning"
-                if config.skeleton_method=="hj-flux" else "Distance-priority vertex-link thinning with physical leaf pruning"),
-            source_sha256_python_backend=sha256(Path(__file__).with_name("open_preprocessing.py")))
-        if config.curvature_method != "cotan":
-            metadata["source_sha256_curvature_estimators"]=sha256(Path(__file__).with_name("curvature_estimators.py"))
-        if "method_details" in result:metadata["method_details"]=result["method_details"]
+    metadata.update(scope="Independent mesh preprocessing using NumPy/SciPy/Numba; no legacy executable calls",
+        method_version=METHOD_VERSION,curvature_geometry={
+            "cotan":"Cotangent mean curvature and angle-defect Gaussian curvature on smoothed mesh",
+            "quadric":"Geodesic-neighborhood quadric fit on smoothed mesh",
+            "implicit-grid":"Signed-distance grid and tangent-plane shape operator from smoothed mesh"}[
+                config.curvature_method]+"; tracking geometry unchanged",
+        feature_definition="smoothed minimum concave-positive principal curvature H-sqrt(max(H^2-K,0)); negative of largest convex-positive principal curvature",
+        legacy_flux_score=None,legacy_only_parameters=["branch_merge","deep_sulci_fraction","flux_count_threshold","max_flux_pruning_iterations"],
+        distances="Mesh-edge shortest paths in mm",skeleton=(
+            "One-ring average-flux priority and simple-point thinning with physical leaf pruning"
+            if config.skeleton_method=="hj-flux" else "Distance-priority vertex-link thinning with physical leaf pruning"),
+        source_sha256_python_backend=sha256(Path(__file__).with_name("open_preprocessing.py")))
+    if config.curvature_method != "cotan":
+        metadata["source_sha256_curvature_estimators"]=sha256(Path(__file__).with_name("curvature_estimators.py"))
+    if "method_details" in result:metadata["method_details"]=result["method_details"]
     metadata["source_sha256"]=sha256(Path(__file__))
     (output/"preprocessing.json").write_text(json.dumps(metadata,indent=2)+"\n")
     return metadata

@@ -9,7 +9,7 @@ uses independent NumPy/SciPy/Numba implementations. It requires no MATLAB,
 FreeSurfer executable, VTK runtime or separately supplied legacy executables.
 Optional rigid registration uses ANTsPy. FOD estimation is outside this pipeline.
 
-This is the 0.3.0.dev16 release-preparation tree. The numerical implementation
+This is the 0.3.0.dev17 release-preparation tree. The numerical implementation
 and recommended defaults match dev11; this revision separates portable tests
 and documentation from the institution-specific research workspace. The
 legal copyright-holder and license authorization still need to be finalized
@@ -199,8 +199,11 @@ Publishing setup; no automatic publishing job is enabled.
 Repository layout
 -----------------
 
-README.md is the GitHub landing page. The historical Surface_tracking_c++/
-directory and its notices are preserved unchanged in the repository; the MATLAB
-directory is removed from the current tree and remains in Git history. Python
-wheel/source distributions exclude legacy source and the existing 101107.tar.gz
-Git LFS example pointer. No proposed Python license applies to those assets.
+README.md is the GitHub landing page. The main branch contains the Python
+pipeline, portable tests, documentation and synthetic examples. Historical
+implementations, their original notices and the old example archive remain on
+the `legacy branch <https://github.com/Xinyu-Nie/SurfTracker/tree/legacy>`_ and
+`dev-c++ branch <https://github.com/Xinyu-Nie/SurfTracker/tree/dev-c%2B%2B>`_,
+with earlier revisions in Git history. No proposed Python license applies to
+those historical assets. The external native-kernel backend is no longer
+supported; the independent Python pipeline and its recommended defaults remain.

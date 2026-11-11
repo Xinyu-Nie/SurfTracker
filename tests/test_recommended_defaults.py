@@ -22,7 +22,7 @@ def test_recommended_profile_preserves_explicit_baseline_and_overrides():
 
 
 @pytest.mark.parametrize('option,value',[('smoothing_mass','invalid'),('segmentation_energy','invalid'),('backend','legacy-native')])
-def test_candidate_rejects_invalid_or_native_only_combinations(option,value):
+def test_candidate_rejects_invalid_settings_or_removed_backend(option,value):
     with pytest.raises(ValueError):PreprocessConfig.agreement_candidate(**{option:value}).validate()
 
 
@@ -82,3 +82,17 @@ def test_cli_defaults_to_recommended_and_previous_profile_remains_explicit():
     parser=argparse.ArgumentParser();cli.add_preprocessing_options(parser)
     assert cli.preprocessing_config(parser.parse_args([]))==PreprocessConfig.recommended()
     assert cli.preprocessing_config(parser.parse_args(['--preprocess-profile','previous-defaults']))==PreprocessConfig()
+
+
+@pytest.mark.parametrize('arguments',[
+    ['doctor','--backend','legacy-native'],
+    ['doctor','--tools-json','tools.json'],
+    ['preprocess','--surface','unused','--output-dir','unused','--backend','legacy-native'],
+    ['preprocess','--surface','unused','--output-dir','unused','--tools-json','tools.json'],
+    ['run','--subject-dir','unused','--fod','unused','--output-dir','unused',
+     '--sh-basis','legacy-real-even','--assume-scanner-aligned','--tools-json','tools.json'],
+])
+def test_cli_rejects_removed_native_backend_and_executable_overrides(arguments):
+    with pytest.raises(SystemExit) as error:
+        cli.main(arguments)
+    assert error.value.code==2

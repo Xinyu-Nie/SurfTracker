@@ -2,24 +2,24 @@ Release preparation
 ===================
 
 The Python package in this repository is prepared for SurfTracker (PyPI
-distribution: SurfTracker; Python import and command: swmtrack). The historical C++ source is retained separately in Surface_tracking_c++/;
-MATLAB is removed from the current tree and remains in Git history. Runtime modules, portable tests, public workflow documentation and
-four generic helper scripts are included. Subject-specific benchmark, license
-recovery, external-tool bundling, dataset reconstruction and cohort plotting
-scripts remain in the original research workspace.
+distribution: SurfTracker; Python import and command: swmtrack). The main branch
+contains the Python pipeline, portable tests, public workflow documentation and
+four generic helper scripts. Historical implementations, their original notices
+and the old example archive are retained on the legacy and dev-c++ branches and
+in Git history. Subject-specific experiments remain in the research workspace.
 
-The Python distributions contain no legacy source/executable/library payload,
-cohort dataset, large scientific result directory, virtual environment, research
-test dependency or original Git metadata. MANIFEST.in controls their contents.
-A GitHub source archive instead contains its tagged tree, including the
-preserved C++ source and the existing example-data pointer.
+The main tree and Python distributions contain no historical source/executable/
+library payload, cohort dataset, large result directory, virtual environment or
+research-test dependency. The old 101107.tar.gz example pointer and its sole
+Git LFS rule have been removed from main. MANIFEST.in continues to guard against
+accidentally including historical source/data in Python distributions.
 
-The development version is 0.3.0.dev16. Dev12 separated portable tests; dev13
-adds verified citations, human contributor roles and a scoped BSD-3-Clause
-proposal. The frozen dev11 numerical validation artifacts remain intact. Numerical algorithms and defaults are unchanged. The runtime version string
-and optional native-payload reinstall message reflect the new distribution. No cohort computation
-needs to be repeated to validate this test/documentation reorganization.
-Portable unit/integration tests and clean archive/install checks are rerun.
+The development version is 0.3.0.dev17. The optional external native-executable
+backend and --tools-json interface have been removed. The independent Python
+algorithms, FOD convention identifier and recommended numerical defaults remain
+unchanged. Portable unit/integration tests and clean archive/install checks are
+rerun. The copyright holder remains unspecified and no active project license
+has been added.
 
 Before publication
 ------------------
@@ -33,9 +33,8 @@ Before publication
   supported platform/Python range, and configure repository CI/publishing.
 * Run python -m twine check and the isolated wheel/sdist test procedure against
   the exact final artifacts; rehearse on TestPyPI before a public release.
-* Preserve the existing GitHub history and scope the new tagged source tree
-  to the intended Python release. This preparation does not initialize Git,
-  change the remote repository, upload packages or publish a release.
+* Preserve the existing GitHub history and scope the tagged source tree to
+  the Python release. Repository preparation does not publish a PyPI release.
 
 Additional preparation in dev14
 -------------------------------
@@ -65,3 +64,13 @@ base revision. MATLAB is removed only in the proposed current tree; history
 is preserved. Explicit manifest exclusions keep legacy source and the existing
 Git LFS example pointer out of Python distributions. CI checks pull requests
 and main without enabling automatic package uploads.
+
+Python-only main in dev17
+-------------------------
+
+Remove Surface_tracking_c++, 101107.tar.gz and .gitattributes from main while
+preserving the legacy and dev-c++ branch tips. The attribute file contained only
+an LFS rule for *.gz, and the deleted example was its only tracked match.
+Remove the external native backend, executable overrides and payload tests;
+update public documentation to link to the historical branches. Retain current
+Python computations and the supported FOD convention.

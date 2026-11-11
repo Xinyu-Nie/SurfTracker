@@ -15,7 +15,7 @@ import zipfile
 
 
 FORBIDDEN_PARTS = {"_native", "__pycache__", ".git", ".venv", "results", "research", "research_tests", "build", "dist",
-                   "Surface_tracking_c++", "Surface_tracking_matlab"}
+                   "Surface_tracking_c++", "Surface_tracking_matlab", "native.py"}
 FORBIDDEN_SUFFIXES = (".pyc", ".nbc", ".nbi", ".so", ".dll", ".exe", ".dylib", ".o", ".a",
                       ".nii", ".nii.gz", ".npz", ".npy", ".vtk", ".tck", ".trk", ".mat", ".raw")
 

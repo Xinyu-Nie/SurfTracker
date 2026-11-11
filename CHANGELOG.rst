@@ -1,6 +1,17 @@
 Changes
 ========
 
+0.3.0.dev17
+-----------
+
+* Make main a Python-only tree; preserve historical implementations and notices
+  on legacy and dev-c++ without changing either branch.
+* Remove the old 101107.tar.gz pointer and .gitattributes after confirming that
+  its only rule applied to that archive.
+* Remove the external native-executable backend, --tools-json and payload tests.
+  Retain independent Python algorithms, recommended defaults and FOD convention.
+* Link documentation to historical branches and preserve contributor credits.
+
 0.3.0.dev16
 -----------
 

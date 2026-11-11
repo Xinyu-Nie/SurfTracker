@@ -68,7 +68,7 @@ def test_qc_exports_original_labels_and_inflation_without_modifying_run(tmp_path
     assert repeat.returncode != 0 and "nonempty" in repeat.stderr
 
 
-@pytest.mark.parametrize("bad_path", [None, "swmtrack/_native/bin/GeoDist", "swmtrack/private.nii.gz", "cohort/helper.py"])
+@pytest.mark.parametrize("bad_path", [None, "swmtrack/native.py", "swmtrack/_native/bin/GeoDist", "swmtrack/private.nii.gz", "cohort/helper.py"])
 def test_archive_guard_accepts_source_only_and_rejects_unwanted_payload(tmp_path, bad_path):
     wheel = tmp_path / "sample.whl"
     with zipfile.ZipFile(wheel, "w") as z:

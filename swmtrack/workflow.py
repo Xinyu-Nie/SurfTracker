@@ -8,7 +8,6 @@ import nibabel as nib
 from . import __version__
 from .freesurfer import import_freesurfer, affine_matrix
 from .io import sha256, write_tractograms, read_surface
-from .native import check_native
 from .preprocessing import preprocess, PreprocessConfig
 from .tracking import TrackingConfig, prepare, save_prepared, load_prepared, track
 from .validation import validate_exports
@@ -40,7 +39,7 @@ def run_pipeline(subject_dir, fod, output_dir, *, scanner_to_world=None,
                  assume_scanner_aligned=False, hemispheres=('lh', 'rh'), annotation='aparc',
                  gyrus_a=None, gyrus_b=None, tracking_config=None,whole_hemisphere=False,
                  preprocess_config=None, shrink_mm=.5, interpolation='vertex',
-                 sh_basis=None, sh_to_world=None, tool_overrides=None, resume=False,
+                 sh_basis=None, sh_to_world=None, resume=False,
                  register_ants=False,b0=None,dwi=None,bvals=None,dwi_mask=None,
                  registration_python=None,registration_threads=1,registration_initialization='com'):
     """Run import, preprocessing, projection, tracking, and independent export checks.
@@ -91,11 +90,6 @@ def run_pipeline(subject_dir, fod, output_dir, *, scanner_to_world=None,
         if not gyrus_a or not gyrus_b:
             raise ValueError('between_gyri requires two nonempty label groups')
     subject, fod, output = Path(subject_dir).resolve(), Path(fod).resolve(), Path(output_dir).resolve()
-    if tool_overrides and preprocess_config.backend!="legacy-native":
-        raise ValueError('Tool overrides require backend="legacy-native"')
-    # Verify externally supplied tools only when the legacy backend is selected.
-    native = (check_native(tool_overrides) if preprocess_config.backend=="legacy-native"
-              else {'tools':{},'passed':True,'backend':'python'})
     relative = ['mri/orig.mgz']
     for hemi in hemispheres:
         relative += [f'surf/{hemi}.white', f'surf/{hemi}.pial', f'label/{hemi}.{annotation}.annot']
@@ -127,7 +121,6 @@ def run_pipeline(subject_dir, fod, output_dir, *, scanner_to_world=None,
         'whole_hemisphere':bool(whole_hemisphere),
         'tracking': asdict(tracking_config), 'preprocessing': asdict(preprocess_config),
         'shrink_mm': shrink_mm, 'interpolation': interpolation,
-        'native_sha256': {name: item['sha256'] for name,item in native['tools'].items()},
     }
     manifest_path = output/'run.json'
     if output.exists() and any(output.iterdir()):
@@ -135,10 +128,10 @@ def run_pipeline(subject_dir, fod, output_dir, *, scanner_to_world=None,
             raise ValueError('Output directory is nonempty; choose a new directory or --resume a matching run')
         previous = json.loads(manifest_path.read_text())
         if previous.get('signature') != signature:
-            raise ValueError('Cannot resume: inputs, parameters, native kernels, or source code changed')
+            raise ValueError('Cannot resume: inputs, parameters, or source code changed')
     output.mkdir(parents=True, exist_ok=True)
     checkpoints = output/'.checkpoints'; checkpoints.mkdir(exist_ok=True)
-    report = {'signature': signature, 'status': 'running', 'native': native, 'hemispheres': {}}
+    report = {'signature': signature, 'status': 'running', 'backend': 'python', 'hemispheres': {}}
 
     def save_report():
         temporary = output/'run.json.tmp'
@@ -154,7 +147,7 @@ def run_pipeline(subject_dir, fod, output_dir, *, scanner_to_world=None,
             print(f'{name}: reused verified outputs', flush=True)
             return
         # A previous interrupted stage has no checkpoint. Clear only that stage's
-        # managed directory to prevent stale patch files/native logs being reused.
+        # managed directory to prevent stale patch files being reused.
         if directory.exists():
             import shutil
             shutil.rmtree(directory)
@@ -194,7 +187,7 @@ def run_pipeline(subject_dir, fod, output_dir, *, scanner_to_world=None,
             pre = output/hemi/'preprocessing'
             pre_options={'whole_hemisphere':True} if whole_hemisphere else {}
             stage(hemi+'_preprocess', pre, lambda: preprocess(imported/f'{hemi}.white.world.vtk',pre,
-                config=preprocess_config, labels_a=a, labels_b=b, atlas_array=annotation, tool_overrides=tool_overrides,**pre_options))
+                config=preprocess_config, labels_a=a, labels_b=b, atlas_array=annotation,**pre_options))
             pre_meta = json.loads((pre/'preprocessing.json').read_text())
             if not pre_meta['tracking_ready']:
                 raise ValueError(f'{hemi}: no qualifying seeds/endpoints; inspect preprocessing.json and the selected ROIs')

@@ -4,7 +4,7 @@ import json
 from dataclasses import asdict
 from scipy import sparse
 from swmtrack.preprocessing import (write_mni_obj,read_branches,write_branches,adjacency,
-    expand_ring,components,label_gaussians,flux_prune,regular_subset,reconstruct_regions,validate_full_surface)
+    expand_ring,components,flux_prune,regular_subset,reconstruct_regions,validate_full_surface)
 from swmtrack.preprocessing import preprocess,PreprocessConfig,connected_join
 from swmtrack.io import read_legacy_obj,write_surface,read_surface,sha256
 from swmtrack.open_preprocessing import METHOD_VERSION
@@ -16,9 +16,9 @@ def octahedron():
     return points,faces
 
 
-def test_native_interchange_retains_world_coordinates_and_identity(tmp_path):
+def test_mni_interchange_retains_world_coordinates_and_identity(tmp_path):
     points,faces=octahedron();points=points+np.array([11.123456789,-20.,3.])
-    path=tmp_path/'native.obj';write_mni_obj(path,points,faces)
+    path=tmp_path/'surface.obj';write_mni_obj(path,points,faces)
     actual,indices,normals=read_legacy_obj(path)
     np.testing.assert_array_equal(actual,points);np.testing.assert_array_equal(indices,faces)
     np.testing.assert_allclose(np.linalg.norm(normals,axis=1),1)
@@ -38,12 +38,6 @@ def test_two_ring_includes_triangle_neighbors_without_self():
     _,faces=octahedron();graph=adjacency(faces,6);ring2=expand_ring(graph)
     assert graph[0,5]==0 and ring2[0,5]
     assert ring2[0,1] and not np.any(ring2.diagonal())
-
-
-def test_gaussian_parameter_groups_use_strict_legacy_bounds():
-    parameters=label_gaussians(np.arange(-3,4),0)
-    np.testing.assert_allclose(parameters,[[.5,-1.5,.5],[.5,2.,1.]])
-    with pytest.raises(ValueError):label_gaussians(np.ones(10),0)
 
 
 def test_subset_removes_pinched_and_isolated_regions():

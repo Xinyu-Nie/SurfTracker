@@ -287,12 +287,12 @@ def test_gaussian_prototypes_resist_tiny_extreme_outlier_class():
             gaussian_costs(invalid,np.ones(len(invalid)),np.ones(len(invalid),dtype=bool))
 
 
-def test_preprocessing_runs_with_no_legacy_payload(tmp_path,monkeypatch):
-    from swmtrack import native
+def test_preprocessing_runs_without_external_executables(tmp_path,monkeypatch):
+    import subprocess
     from swmtrack.preprocessing import preprocess,PreprocessConfig
     from swmtrack.io import write_surface,read_surface
-    def forbidden(*args,**kwargs):raise AssertionError('Legacy executable resolution was attempted')
-    monkeypatch.setattr(native,'bundle_root',forbidden)
+    def forbidden(*args,**kwargs):raise AssertionError('An external executable was invoked')
+    monkeypatch.setattr(subprocess,'Popen',forbidden)
     p,f=sphere(3)
     # Fold a closed surface to exercise real geometry, segmentation and thinning.
     p*=np.where(p[:,2]>.2,.7,1.)[:,None]

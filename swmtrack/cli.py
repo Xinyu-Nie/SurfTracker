@@ -8,7 +8,6 @@ from .io import convert_legacy, write_tractograms
 from .tracking import TrackingConfig, prepare, save_prepared, load_prepared, track
 from .freesurfer import import_freesurfer
 from .preprocessing import preprocess, PreprocessConfig
-from .native import check_native
 from .workflow import run_pipeline
 
 
@@ -29,7 +28,9 @@ def add_preprocessing_options(parser):
     for field in fields(PreprocessConfig):
         default=getattr(PreprocessConfig(),field.name)
         options={}
-        if field.name=="between_gyri_seed_policy":
+        if field.name=="backend":
+            options=dict(choices=["python"])
+        elif field.name=="between_gyri_seed_policy":
             options=dict(choices=["connected-intersection","intersection","legacy-patches"],
                          help="Between-gyri seeds; default connected-intersection.")
         elif field.name=="within_gyrus_seed_policy":
@@ -47,8 +48,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="World-space superficial white matter surface tracking")
     commands = parser.add_subparsers(dest="command", required=True)
     doctor = commands.add_parser("doctor", help="Verify the selected preprocessing runtime")
-    doctor.add_argument("--backend", choices=["python","legacy-native"], default="python")
-    doctor.add_argument("--tools-json", help="Optional JSON mapping of kernel names to replacement executables")
+    doctor.add_argument("--backend", choices=["python"], default="python")
     run = commands.add_parser("run", help="FreeSurfer + FOD to world-space surfaces, masks, and TCK/TRK")
     run.add_argument("--subject-dir", required=True)
     run.add_argument("--fod", required=True)
@@ -63,7 +63,6 @@ def main(argv=None):
     run.add_argument("--sh-to-world", help="Orthogonal 3 x 3 SH direction transform")
     run.add_argument("--shrink-mm", type=float, default=.5)
     run.add_argument("--interpolation", choices=["vertex", "centroid"], default="vertex")
-    run.add_argument("--tools-json")
     run.add_argument("--resume", action="store_true", help="Reuse hash-verified completed stages with identical inputs/configuration")
     alignment = run.add_mutually_exclusive_group(required=True)
     alignment.add_argument("--scanner-to-world", help="Text 4 x 4 scanner RAS to FOD RAS affine")
@@ -85,8 +84,7 @@ def main(argv=None):
     pre.add_argument("--gyrus-a", type=int, nargs="+", default=[14423100], help="One or more packed annotation IDs; within_gyrus merges this group")
     pre.add_argument("--gyrus-b", type=int, nargs="+", default=[1316060])
     pre.add_argument("--endpoint-policy", choices=["between_gyri","within_gyrus"], default="between_gyri")
-    pre.add_argument("--tools-json", help="JSON mapping of legacy kernel names to executable paths")
-    pre.add_argument("--input-feature", help="Optional float32 per-vertex feature in the selected backend's convention; see README")
+    pre.add_argument("--input-feature", help="Optional float32 per-vertex feature in the Python curvature convention; see README")
     pre.add_argument("--reuse-segmentation", help="Reuse a matching preprocessing output directory when selecting new gyri")
     pre.add_argument("--stop-after", choices=["features","segmentation","patches"], default="patches")
     add_preprocessing_options(pre)
@@ -107,7 +105,7 @@ def main(argv=None):
     convert.add_argument("--input-space", choices=["image-mm", "world", "voxel"], default="image-mm")
     convert.add_argument("--mesh-to-world", help="Optional text file containing an explicit 4 x 4 transform")
     for name in ("roi", "seed", "gyrus-a", "gyrus-b", "gyrus"):
-        convert.add_argument("--"+name, help="Legacy int32 per-vertex mask")
+        convert.add_argument("--"+name, help="Int32 per-vertex mask")
     prep = commands.add_parser("prepare", help="Build a reusable geometry and Fourier-coefficient cache")
     prep.add_argument("--surface", required=True); prep.add_argument("--fod", required=True)
     prep.add_argument("--output", required=True); prep.add_argument("--roi-output")
@@ -122,11 +120,8 @@ def main(argv=None):
     add_tracking_options(run, workflow=True)
     args = parser.parse_args(argv)
     if args.command == "doctor":
-        if args.backend=="python":
-            if args.tools_json:parser.error("--tools-json requires --backend legacy-native")
-            from .open_preprocessing import check_python
-            report=check_python()
-        else:report=check_native(json.loads(Path(args.tools_json).read_text()) if args.tools_json else None)
+        from .open_preprocessing import check_python
+        report=check_python()
         print(json.dumps(report,indent=2))
     elif args.command == "run":
         if args.whole_hemisphere and (args.gyrus_a is not None or args.gyrus_b is not None):
@@ -143,8 +138,7 @@ def main(argv=None):
             preprocess_config=preprocessing_config(args),
             register_ants=args.register_ants,b0=args.b0,dwi=args.dwi,bvals=args.bvals,dwi_mask=args.dwi_mask,
             registration_python=args.registration_python,registration_threads=args.registration_threads,
-            registration_initialization=args.registration_initialization,
-            tool_overrides=json.loads(Path(args.tools_json).read_text()) if args.tools_json else None)
+            registration_initialization=args.registration_initialization)
         print(json.dumps({"status":metadata["status"],"outputs":{
             hemi:{key:value for key,value in item.items() if key in ("tck","trk","vtk","patch_count")}
             for hemi,item in metadata["hemispheres"].items()}}, indent=2))
@@ -153,8 +147,7 @@ def main(argv=None):
         metadata=preprocess(args.surface,args.output_dir,config=config,labels_a=args.gyrus_a,
             labels_b=args.gyrus_b if args.endpoint_policy=="between_gyri" else None,
             atlas_array=args.atlas_array,input_feature=args.input_feature,stop_after=args.stop_after,
-            reuse_segmentation=args.reuse_segmentation,
-            tool_overrides=json.loads(Path(args.tools_json).read_text()) if args.tools_json else None)
+            reuse_segmentation=args.reuse_segmentation)
         print(json.dumps(metadata,indent=2))
     elif args.command == "import-freesurfer":
         metadata = import_freesurfer(args.subject_dir, args.fod, args.output_dir,

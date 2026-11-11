@@ -12,7 +12,7 @@ authors:
     given-names: Xinyu
   - family-names: Shi
     given-names: Yonggang
-version: "0.3.0.dev16"
+version: "0.3.0.dev17"
 repository-code: "https://github.com/Xinyu-Nie/SurfTracker"
 url: "https://github.com/Xinyu-Nie/SurfTracker"
 keywords:

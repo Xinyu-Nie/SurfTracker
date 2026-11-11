@@ -180,19 +180,20 @@ artifacts outside the checkout and the synthetic example across the configured
 Python/platform matrix. It does not publish packages. See [testing](docs/testing.rst)
 and [release preparation](docs/publishing.rst).
 
-## Legacy C++ implementation
+## Historical implementations
 
-The original [C++ implementation](Surface_tracking_c++/README.md) is retained
-unchanged for reference, including its contributor and third-party notices.
-It is independent of the Python installation and excluded from Python wheel
-and source distributions. Historical C++ documentation may reference the MATLAB
-implementation, which has been removed from the current repository tree.
-Earlier revisions remain in Git history.
+`main` contains the Python pipeline. The historical implementations and their
+original notices remain on the [legacy branch](https://github.com/Xinyu-Nie/SurfTracker/tree/legacy)
+and [dev-c++ branch](https://github.com/Xinyu-Nie/SurfTracker/tree/dev-c%2B%2B).
+They are separate from the Python installation. The old example archive and its
+Git LFS rule have also been removed from `main`; earlier revisions remain in
+Git history. See [example-data guidance](docs/example_data.rst) for data-use terms
+and the synthetic example included with this package.
 
-The existing `101107.tar.gz` Git LFS example pointer is retained for legacy
-compatibility and is excluded from the Python distributions. Consult the
-applicable HCP data-use terms before obtaining or using human example data.
-The proposed Python license does not relicense legacy source or example data.
+The Python pipeline uses its independent preprocessing implementation. The
+external native-kernel backend and `--tools-json` option have been removed.
+`legacy-real-even` remains the name of the supported FOD spherical-harmonic
+convention; it does not require legacy software.
 
 ## Cite both methods
 
