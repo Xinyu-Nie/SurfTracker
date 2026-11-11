@@ -258,15 +258,8 @@ and [release preparation](docs/publishing.rst).
 `main` contains the Python pipeline. The historical implementations and their
 original notices remain on the [legacy branch](https://github.com/Xinyu-Nie/SurfTracker/tree/legacy)
 and [dev-c++ branch](https://github.com/Xinyu-Nie/SurfTracker/tree/dev-c%2B%2B).
-They are separate from the Python installation. The old example archive and its
-Git LFS rule have also been removed from `main`; earlier revisions remain in
-Git history. See [example-data guidance](docs/example_data.rst) for data-use terms
-and the synthetic example included with this package.
+They are separate from the Python installation. 
 
-The Python pipeline uses its independent preprocessing implementation. The
-external native-kernel backend and `--tools-json` option have been removed.
-`legacy-real-even` remains the name of the supported FOD spherical-harmonic
-convention; it does not require legacy software.
 
 ## Cite both methods
 
