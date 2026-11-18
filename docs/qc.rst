@@ -3,12 +3,12 @@ QC outputs
 
 The pipeline writes the full preprocessed white VTK and the inward tracking
 surface, plus tracks.vtk, tracks.tck, tracks.trk and numerical validation reports.
-The portable source helper scripts/export_qc.py exports label-only white and
+The public helper scripts/export_qc.py exports label-only white and
 optional native inflated surfaces for every requested completed hemisphere.
 The helper never reruns or modifies segmentation, registration or tracking.
 
-Run the helper from a source checkout or extracted source archive with an
-installed swmtrack package::
+Run the helper from this documentation checkout or the extracted binary kit,
+with the SurfTracker wheel installed::
 
     python scripts/export_qc.py --run-dir output/whole \
         --output-dir qc/whole --inflated

@@ -1,70 +1,32 @@
-Portable tests and artifact verification
-========================================
+Checking the public downloads
+=============================
 
-The default tests/ suite contains runtime, geometry, SH projection, segmentation,
-seed-policy, registration-interface, checkpoint, endpoint, I/O and helper tests.
-Fixtures are constructed locally from synthetic meshes/images/annotations.
-The suite does not depend on historical executables. It verifies that Python
-preprocessing runs when external process execution is forbidden and that the
-removed native backend/options are rejected.
+The public repository supplies installation/QC/audit helpers and a synthetic
+example. Scientific implementation tests are maintained privately. To inspect
+a Git checkout of this documentation/download tree without importing the core::
 
-Historical algorithm experiments and their tests remain in the original
-research workspace. They are not silently skipped by an import guard or shipped
-as broken tests: they are explicitly outside the clean release tree. The
-recommended-profile tests use analytic FEM and Gaussian-likelihood expectations
-and check CLI overrides directly without importing experimental drivers.
+    python scripts/check_public_repository.py
 
-From a clean checkout::
+This verifies approved files, local Markdown links, download hashes, wheel
+payload/RECORD contents and the binary-kit boundary. To inspect only a wheel::
 
-    python -m pip install '.[test,release]'
-    OPENBLAS_NUM_THREADS=1 python -m pytest -q
-    python -m build
-    python scripts/check_distributions.py dist/*.whl dist/*.tar.gz
-    python -m twine check dist/*
+    python scripts/check_binary_wheel.py binaries/0.3.0.dev18/*.whl
 
-The source archive explicitly contains its portable test helpers and scripts.
-Extract it into a new directory and run pytest there without adding the original
-research workspace to PYTHONPATH. Also rebuild a wheel from that extracted
-source; archive checks should report matching package source and version.
+In an extracted binary kit, the wheel is in its root directory rather than
+binaries/0.3.0.dev18/. Use SHA256SUMS and check_binary_wheel.py for its integrity.
 
-To test the installed wheel independently, install the runtime dependencies and
-pytest in a fresh environment, install that wheel with --no-deps, and invoke
-pytest against the extracted archive's tests/ from an unrelated empty directory.
-Use --import-mode=prepend (pytest's default) so synthetic test-fixture modules
-can import one another. Verify that swmtrack.__file__ points into the installed
-environment, not the original checkout. Do not add the original scripts/ or
-research directory to PYTHONPATH. The generic script tests invoke the archive's
-helper files in temporary working directories using the package under test.
+After installing the wheel in a fresh Python 3.12 Linux environment, run::
 
-No PyPI/GitHub upload is part of these checks. Licensing, README rendering and
-supported-platform CI execution are separate final release requirements. The content
-checker accepts the current license-pending development archives, reports
-project_license_ready=false, and rejects them under --require-license.
+    python -m pip check
+    swmtrack doctor
+    python -m swmtrack run --help
+    python scripts/synthetic_demo.py --output-dir output/synthetic
+    python scripts/validate_installation.py --demo output/synthetic/demo.json
 
-Automated offline artifact check
---------------------------------
-
-With runtime/test/build dependencies already installed::
-
-    python scripts/verify_artifacts.py \
-        --wheel dist/surftracker-0.3.0.dev17-py3-none-any.whl \
-        --sdist dist/surftracker-0.3.0.dev17.tar.gz \
-        --output-dir release-audit/artifact-tests
-
-This extracts the archive safely to a fresh temporary directory, runs its tests,
-installs the wheel into a separate target, verifies the imported package path,
-and repeats the tests from an unrelated working directory. It also verifies SurfTracker distribution metadata, exercises the registered
-swmtrack console entry point and module CLI, and rebuilds the wheel from the
-extracted source. No original
-workspace or research-script path is added. Dependency resolution and platform
-coverage require separate fresh-environment CI; this check reuses the current
-interpreter's numerical/test/build dependencies and makes no network requests.
-
-Prepared continuous integration
---------------------------------
-
-The GitHub Actions workflow in .github/workflows/ci.yml runs the above artifact
-checks and strict Twine checks on each matrix environment, plus the synthetic
-tracking example. It does not upload to PyPI/TestPyPI. The configured matrix
-provides compatibility evidence through its recorded GitHub job results.
-See publishing.rst for the publishing rehearsal and account setup.
+The synthetic case exercises the installed native package, endpoint constraints
+and independently checked TCK/TRK/VTK exports. It contains no human data. The
+validator confirms native module origins, interfaces/defaults and the expected
+98 accepted streamlines/digest. These are download checks rather than cortical
+segmentation or anatomical validation. Full compiled/source comparison scope is
+reported in validation.rst. No check here builds source distributions or uploads
+a package to a package index.

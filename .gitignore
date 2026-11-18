@@ -5,12 +5,21 @@ __pycache__/
 *.pyc
 *.nbc
 *.nbi
+*.pyx
+*.pxd
+*.so
+*.pyd
+*.c
+*.cpp
 build/
 dist/
 results/
+validation/
+output/
 qc/
 release-audit/
-swmtrack/_native/
-
-# Local license review templates; add the approved top-level LICENSE later.
+swmtrack/
+build_support/
+research/
+research_tests/
 licensing/

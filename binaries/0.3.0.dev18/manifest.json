@@ -1,0 +1,41 @@
+{
+  "version": "0.3.0.dev18",
+  "distribution": "SurfTracker",
+  "command": "swmtrack",
+  "python_import": "swmtrack",
+  "platform": "Linux x86_64 / CPython 3.12",
+  "native_platform_tags": [
+    "manylinux2014_x86_64",
+    "manylinux_2_17_x86_64"
+  ],
+  "tested_glibc": "2.31",
+  "files": {
+    "surftracker-0.3.0.dev18-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl": {
+      "sha256": "aad58cb904e7bdb253dd0443391c1020459f84cdb57c4820f9fdafad0e47d3da",
+      "bytes": 1284637
+    },
+    "SurfTracker-0.3.0.dev18-linux-cp312-binary.zip": {
+      "sha256": "f82f395d1928c0f143609a8713c81ffef4dfbda48fb554a2f4e4ad273b41a143",
+      "bytes": 1311639
+    },
+    "requirements-validation.txt": {
+      "sha256": "a16fb6711a17f830bcb46757204c3cb31a5cd287afc80226763223c084cb49b5",
+      "bytes": 87
+    }
+  },
+  "compiled_implementation_commit": "96895c083f26b141aae29fee75188e6429052173",
+  "native_modules": 10,
+  "protected_source_files": 0,
+  "validation": {
+    "installed_portable_tests": 155,
+    "api_definitions": 107,
+    "rng_draws": 5000,
+    "prepared_cases": 35,
+    "tracking_runs_per_implementation": 70,
+    "fresh_freesurfer_fod_cases": 4,
+    "maximum_observed_coordinate_difference_mm": 0.0,
+    "synthetic_attempts": 256,
+    "synthetic_accepted": 98
+  },
+  "scope": "Wheel-only core distribution; existing Git history and historical branches are retained."
+}

@@ -41,7 +41,7 @@ Current recommended defaults
 ================================== =======================================
 Stage / parameter                  Default
 ================================== =======================================
-Backend                            Independent Python
+Backend                            Independent compiled core (python ID)
 Workflow preprocessing profile     recommended (agreement-candidate alias)
 Geometry and feature smoothing     0.5, consistent FEM mass for both
 Curvature                          implicit-grid; no coordinate rounding
@@ -183,4 +183,4 @@ of gyral segmentation regions, applies the length limits, and classifies the
 accepted trajectories by their two original endpoint parcels. Unknown and
 medial-wall annotation regions and noncortex vertices are excluded. All other
 recommended defaults remain unchanged. Use ``tracks.vtk`` cell labels and the
-per-track endpoint tables for selection; see README.rst for label definitions.
+per-track endpoint tables for selection; see qc.rst for label definitions.

@@ -1,8 +1,10 @@
-Python preprocessing
-====================
+Sulcus/gyrus preprocessing
+===========================
 
-The default backend is an independent NumPy/SciPy/Numba implementation. It does
-not invoke the historical native kernels. Geometry and feature smoothing use
+The wheel uses the independently implemented segmentation methods with a
+compiled scientific core and NumPy/SciPy operations. The CLI backend identifier
+python is retained for compatibility. Historical external executables are not
+invoked. Geometry and feature smoothing use
 consistent FEM mass with weight 0.5. The curvature estimator uses a 1-mm signed-
 distance grid, 1.5-mm derivative sigma, 6-mm band and gradient fallback threshold
 0.2. Coordinates are not rounded. The tracking mesh is not replaced by the

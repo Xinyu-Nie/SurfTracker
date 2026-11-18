@@ -1,9 +1,9 @@
 Workflow examples
 =================
 
-Install this source tree with ``python -m pip install .``. After publication,
-install the PyPI distribution ``SurfTracker``. The Python import and command
-remain ``swmtrack``. Run ``swmtrack run --help`` for every input/override.
+Install the compiled wheel described in ../README.md or use the complete binary
+kit. The Python import and command remain swmtrack. Run swmtrack run --help for
+all input/override options.
 Replace /data paths with your
 own FreeSurfer and supported FOD inputs. Explicit alignment and SH convention
 are required; no institutional dataset or cohort script is needed.
@@ -57,7 +57,7 @@ Do not reuse a nonempty output directory after changing code, input or settings.
 Synthetic tracking example
 --------------------------
 
-With the package installed, from the source archive run::
+With the wheel installed, from this checkout or the binary kit run::
 
     python scripts/synthetic_demo.py --output-dir output/synthetic
 

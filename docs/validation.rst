@@ -1,139 +1,74 @@
-Validation scope
-================
+Validation of the compiled build
+================================
 
-The current numerical baseline was evaluated with the dev10/dev11 artifacts
-before this release-tree cleanup. Scientific outputs and dataset files remain
-in the original research workspace and are not redistributed here. Subsequent
-release-preparation revisions preserve the numerical algorithms and defaults.
-Distribution metadata, version strings and installation messages may differ.
+Version 0.3.0.dev18 was built and tested on Linux x86_64 / CPython 3.12 with
+NumPy 2.3.3, SciPy 1.16.2, Numba 0.68.1, llvmlite 0.50.0, NiBabel 5.4.2 and
+meshio 5.3.5. The wheel bytes match the privately tested artifact; see
+binaries/0.3.0.dev18/manifest.json and SHA256SUMS. Core implementation commit:
+96895c083f26b141aae29fee75188e6429052173 (private source provenance).
 
-Fresh FreeSurfer + FOD targeted tests
--------------------------------------
-
-Four subjects (100307, 100408, 101309, 102008), both hemispheres, and central,
-superior/middle temporal and merged whole-parietal tracking were evaluated in
-24 independent public-CLI runs using recommended defaults. No segmentation or
-projection cache was supplied. All 24 runs were nonempty and passed numerical
-export/endpoint checks. Accepted totals were 185,445 central, 50,692 temporal
-and 802,044 whole-parietal trajectories. These runs reproduced the frozen
-recommended-configuration trajectory coordinates exactly. The targeted and
-whole-hemisphere cohorts used the group-supplied Order16 FOD model; native
-MRtrix3 FOD compatibility was evaluated separately below.
-
-Whole-hemisphere tests
-----------------------
-
-The same four subjects and both hemispheres were evaluated in eight fresh
-public-CLI runs. Sulcal cortical vertices supplied seeds; all gyral cortical
-regions formed one binary termination target. All eight outputs were nonempty,
-with 3,860,835 accepted trajectories in total. Every saved curvature, initial/
-cleaned/final label, depth, flux and skeleton array exactly matched the
-corresponding preceding targeted run.
-
-Endpoint-classified subsets contained 186,772 central, 60,599 superior/middle
-temporal and 829,985 whole-parietal trajectories. The full tractograms retained
-1,507,858 same-parcel, 2,350,170 cross-parcel and 2,807 ambiguous-parcel paths.
-Ambiguous endpoints were excluded from named subsets. Named subsets are based
-on endpoints and may leave/re-enter their selected ROI; they do not reproduce
-the restricted-domain targeted experiment exactly.
-
-Checks and limits
------------------
-
-Checks include independent TCK/TRK readback, finite/in-image coordinates for all
-points, physical-surface membership sampling, every endpoint against its recorded
-triangle and required target, integrated length limits, and exact VTK point/
-polyline/cell-scalar readback. QC label surfaces retain original vertex identities
-and point arrays. The default tracking range is 8--150 mm.
-
-Existing HCP scanner/FOD alignment was explicitly declared; these cohorts did
-not fit an additional ANTs transform. Optional registration has separate
-synthetic affine/landmark and workflow tests. Coordinate bounds and successful
-optimization do not establish anatomical registration.
-
-Both eight-hemisphere contact sheets were inspected, with nonempty central,
-temporal and whole-parietal subsets. Projected views sampled at most 1,000 paths
-per selection; full VTKs retain all accepted paths. Tract counts, spatial overlap
-proxies and numerical checks do not establish anatomical correctness, complete
-sulcal coverage, biological sensitivity or accuracy of individual U-fibers.
-Expert review and appropriately scoped claims remain necessary for interpretation.
-
-MRtrix3 FOD compatibility
+Installed package and API
 -------------------------
 
-The saved 101107 left-hemisphere experiment used MRtrix3 3.0.8, Dhollander
-responses, MSMT-CSD lmax=8 (45 WM SH coefficients), and both raw and mtnormalise-
-normalized WM FODs. This historical tracker test used package 0.2.0 and existing
-surface/seed/endpoint masks, with no additional registration or surface fitting.
-It was not a fresh FreeSurfer-to-segmentation run with current seed defaults.
-The within-precentral case used the supplied precentral endpoint mask rather
-than the full annotation parcel.
+* 155 portable tests pass against the installed native wheel outside its source
+  checkout. These cover geometry, SH projection, tracking, preprocessing, ROI
+  seeds, endpoint rules, I/O, registration contracts and workflow/cache behavior.
+* All 107 checked source API signatures/dataclass definitions match, including
+  resolved runtime field types and defaults.
+* A clean environment without Cython passes the actual swmtrack command,
+  python -m swmtrack, imports, pip check and the synthetic example.
+* The synthetic example produces 98 accepted streamlines from 256 attempts.
+  Its streamline digest is
+  8c4b8046e76d972584759a17a05cdef0f5d929214c2a538b783c4253103266bb.
+* Wheel/RECORD/native-library audits and README rendering pass. Eleven
+  invalid source/cache/data/tamper payload variants are rejected. The private
+  build rejects source-archive creation.
 
-MRtrix3 sh2amp independently evaluated every basis function on 187 directions.
-The maximum absolute basis-amplitude difference was 5.70e-8; no coefficient
-conversion or SH direction transform was required (scanner/world RAS axes).
-The current Python basis was also compared against those saved MRtrix3
-amplitudes when preparing this documentation and reproduced that error.
-Independent world-space polar projection on 64 faces had relative L2 error
-2.77e-8. One- and four-thread between-gyri runs produced identical trajectories.
-CLI/API tracking and independent TCK/TRK readback checks passed.
+Scientific implementation agreement
+------------------------------------
 
-Each case below used 8,394 attempts, RNG 42, 0.5-mm inward offset and step,
-14 degrees/mm turning limit, minimum FOD 0.01, and length range 8--150 mm::
+Five thousand SplitMix64 draws match exactly, including unsigned overflow cases.
+Thirty-five prepared cases cover the four-subject central, temporal, merged
+whole-parietal and whole-hemisphere cohort plus existing native MRtrix3 raw and
+normalized FOD conditions. Each uses 512 attempts with one and four workers and
+different batch sizes: 70 runs and 35,840 attempts per implementation. Seed
+arrays, accepted IDs, stops, endpoints, lengths and coordinates match exactly.
 
-    WM FOD       Endpoint requirement       Accepted
-    normalized   between gyri                  4,185
-    raw          between gyri                  4,057
-    normalized   within precentral mask          424
+Four fresh FreeSurfer/FOD cases each use 512 attempts:
 
-The original group-supplied lmax=16 FOD accepted 2,389 between-gyri tracks with
-the same geometry/masks and attempts. These models have different angular order
-and amplitude scales; equal counts are not a compatibility criterion. The
-absolute min_fod threshold is not calibrated across all FOD models by this test.
-These results establish tested numerical compatibility, not anatomical accuracy
-or full-cohort validation of native MRtrix3 FODs. Source reports and data remain
-in the research workspace under results/101107_mrtrix3/; no human images or
-tractograms are redistributed with the package.
+===========================  ===============  ===========================
+Mode                         Accepted tracks  Maximum observed difference
+===========================  ===============  ===========================
+Precentral/postcentral LH    131              0 for features/coordinates
+Superior/middle temporal RH  76               0 for features/coordinates
+Merged whole-parietal LH     163              0 for features/coordinates
+Whole hemisphere RH          195              0 for features/coordinates
+===========================  ===============  ===========================
 
-Portable packaging tests
--------------------------
+Initial/cleaned/final labels, skeletons, masks, geometry, projection and seed
+arrays match exactly. Both implementations pass verified workflow resume and
+tractogram export checks. These comparisons used the recommended settings with
+the attempt count fixed for validation. Scientific defaults are unchanged.
 
-The release tree's tests generate synthetic inputs. Research experiment tests
-remain in the original workspace. Source, extracted-sdist and installed-wheel
-tests run independently without putting that workspace on PYTHONPATH. The
-release-audit directory in the prepared local tree records the exact test counts,
-archive/source hashes and artifact checks; it is excluded from source archives
-and future Git tracking. See testing.rst for the reproduction procedure.
+Limits
+------
 
-Small tracking sensitivity screen
----------------------------------
+These checks establish compiled/source agreement on the tested inputs, not
+anatomical correctness. Prior cohort/sensitivity work showed subject-dependent
+temporal coverage and responses to inward offset and FOD threshold. Review
+segmentation, seed coverage, endpoints and anatomical alignment in each study.
 
-A dev14 screen used subjects 100307 and 100408, left hemisphere only, for
-central and superior/middle temporal between-gyri tracking. Each case used
-2,000 attempts, not the default 20 attempts/mm2. Saved recommended segmentation
-and ROI/seed/endpoint masks were fixed. Seven conditions per selection tested
-RNG 42/43/44, inward offset 0.4/0.5/0.6 mm, and minimum FOD 0.008/0.01/0.012,
-changing one setting at a time. Nonbaseline offsets recomputed FOD projection
-on the shifted surface. All 28 conditions were nonempty and passed physical
-length, endpoint-target, image-bound and independent TCK/TRK readback checks.
+Only the stated Linux/Python/dependency combination was executed for the
+compiled build. Native dependency auditing permits manylinux2014 / glibc 2.17
+tags; execution used glibc 2.31. Other operating systems, architectures, Python
+ABIs and dependency combinations need validation. Optional isolated ANTs worker
+contracts remain covered; new ANTs fits were not part of these comparisons.
+No human input datasets or cohort tractograms are included in the downloads.
 
-Accepted counts (each condition has 2,000 attempts)::
+Public download checks
+-----------------------
 
-    Subject  Selection  Baseline  RNG 43/44  Offset .4/.6  FOD .008/.012
-    100307   central         523  562/554    528/560        575/488
-    100307   temporal        258  242/245    211/256        321/202
-    100408   central         581  565/567    576/608        642/537
-    100408   temporal        252  278/272    263/267        272/243
-
-For 100307 temporal tracking, lowering/raising the FOD threshold changed
-accepted counts by approximately +24%/-22%, while reducing the inward offset
-to 0.4 mm changed counts by about -18%. RNG changes alone produced smaller
-changes there; 100408 showed a different response. This supports documenting
-threshold/offset sensitivity and reviewing temporal coverage. It does not
-establish parameter robustness or justify retuning defaults to maximize counts.
-
-The recommended defaults remain 0.5-mm offset, minimum FOD 0.01 and RNG 42.
-This fixed-count screen supplements the preceding full-density cohort runs; it
-does not replace all-hemisphere review, test registration sensitivity, or prove
-anatomical correctness. Full scientific outputs stay outside the package. HCP
-data acknowledgment and data-use conditions are in example_data.rst.
+Public CI audits the documentation/download tree, checks artifact hashes and
+native payloads, installs the wheel and runs the standalone synthetic example
+and API/default checks. It does not rebuild the private core or claim to rerun
+the full scientific suite. See testing.rst and the repository Actions results.

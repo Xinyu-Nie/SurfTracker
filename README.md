@@ -7,35 +7,48 @@ tractograms in physical RAS+ millimeters.
 
 | Interface | Name |
 | --- | --- |
-| PyPI distribution | `SurfTracker` |
+| Distribution | `SurfTracker` |
 | Python import | `swmtrack` |
 | Command | `swmtrack` |
 
-This branch prepares the Python package for release. It is not yet published
-on PyPI. The project copyright holder remains unspecified and BSD-3-Clause is
-the proposed Python license; no active project license grant is declared here.
-See [licensing status](docs/licensing.rst) and [contributor credits](AUTHORS.rst).
+This public repository provides documentation, usage examples and compiled
+binary downloads. The scientific core is maintained privately. The `swmtrack`
+command, Python imports and recommended numerical settings are preserved.
 
-## Install
+## Download and install
 
-Use a Python 3.10+ environment and install from this checkout:
+The current build is **0.3.0.dev18 for CPython 3.12 on Linux x86_64**.
+Windows, macOS, other Python versions and other architectures need separate
+builds. The native wheel has manylinux2014 / glibc 2.17 compatibility tags;
+execution was tested on a glibc 2.31 host.
+
+- [Download the complete binary kit](binaries/0.3.0.dev18/SurfTracker-0.3.0.dev18-linux-cp312-binary.zip): wheel, pinned validation dependencies, examples and documentation.
+- [Download the wheel](binaries/0.3.0.dev18/surftracker-0.3.0.dev18-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl).
+- [Checksums](binaries/0.3.0.dev18/SHA256SUMS) · [Download manifest](binaries/0.3.0.dev18/manifest.json).
+
+After unzipping the kit, create a fresh Python 3.12 environment and follow its
+README. To install directly from GitHub:
 
 ```bash
-python -m pip install .
+python3.12 -m venv surftracker-env
+source surftracker-env/bin/activate
+python -m pip install \
+  -c https://raw.githubusercontent.com/Xinyu-Nie/SurfTracker/main/binaries/0.3.0.dev18/requirements-validation.txt \
+  https://raw.githubusercontent.com/Xinyu-Nie/SurfTracker/main/binaries/0.3.0.dev18/surftracker-0.3.0.dev18-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
 swmtrack doctor
 swmtrack run --help
 ```
 
-After a PyPI release, the installation command will be:
+The constraints reproduce the numerical dependency versions used for validation.
+No compiler or Cython runtime is required. SurfTracker uses NumPy, SciPy,
+NiBabel and meshio; Numba remains a dependency for thread-configuration
+compatibility. Core algorithms execute in native modules. Existing FreeSurfer
+outputs can be read without FreeSurfer executables, MATLAB or a VTK runtime.
 
-```bash
-python -m pip install SurfTracker
-```
-
-The Python pipeline uses NumPy, SciPy, Numba, NiBabel and meshio. It does not
-require the legacy C++ binaries, MATLAB, FreeSurfer executables or a VTK runtime.
-Use a fresh environment when migrating from the old development distribution
-named `swmtrack`; both names install the same import package and command.
+Use the supplied wheel for installation. This documentation/download repository
+contains no source package to build with `pip install .`. Use a fresh environment
+when migrating from the older distribution named `swmtrack`, which uses the same
+import package and command. See [download details](docs/downloads.rst).
 
 ## Inputs and alignment
 
@@ -170,7 +183,8 @@ tracking settings are documented in [the workflow guide](docs/end_to_end.rst).
 
 ## Optional ANTs registration
 
-Install `.[registration]` from source. Replace `--assume-scanner-aligned` with
+Install ANTsPy in the current or a separate environment as described in the
+[workflow guide](docs/end_to_end.rst). Replace `--assume-scanner-aligned` with
 `--register-ants --b0 /data/subject/mean_b0.nii.gz`, or supply corrected 4D DWI
 and b-values using `--register-ants --dwi ... --bvals ...`.
 
@@ -210,36 +224,42 @@ This exercises preparation, tracking and validated exports on a flat mesh;
 it does not test cortical segmentation. HCP S900 examples require separate
 data-use terms and recipient acceptance. See [example-data guidance](docs/example_data.rst).
 
-## Validation and development
+## Python interface
 
-The portable suite creates synthetic fixtures. The scientific validation covers
-four subjects, both hemispheres and the central, temporal, merged-parietal and
-whole-hemisphere workflows. A small sensitivity screen found subject-dependent
-temporal responses to offset and FOD threshold. Counts and numerical checks do
-not establish anatomical correctness or complete sulcal coverage.
-See [validation scope](docs/validation.rst).
+The same Python calls are available after installing the wheel:
 
-```bash
-python -m pip install '.[test,release]'
-python -m build
-python -m twine check --strict dist/*
-python scripts/check_distributions.py dist/*.whl dist/*.tar.gz
-python scripts/verify_artifacts.py --wheel dist/*.whl --sdist dist/*.tar.gz \
-  --output-dir release-audit/artifact-tests
+```python
+from swmtrack.tracking import TrackingConfig, prepare, track
+from swmtrack.preprocessing import PreprocessConfig, preprocess
+from swmtrack.workflow import run_pipeline
+
+config = PreprocessConfig.recommended()
 ```
 
-[GitHub Actions](.github/workflows/ci.yml) checks source/wheel builds, installed
-artifacts outside the checkout and the synthetic example across the configured
-Python/platform matrix. It does not publish packages. See [testing](docs/testing.rst)
-and [release preparation](docs/publishing.rst).
+[API examples](docs/python_interface.rst) cover end-to-end and prepared-surface
+usage. Dataclass fields, defaults and ordinary call signatures are preserved.
+Core source inspection and Numba Dispatcher internals are outside the compiled
+interface.
 
-## Historical implementations
+## Validation and distribution
 
-`main` contains the Python pipeline. The historical implementations and their
-original notices remain on the [legacy branch](https://github.com/Xinyu-Nie/SurfTracker/tree/legacy)
-and [dev-c++ branch](https://github.com/Xinyu-Nie/SurfTracker/tree/dev-c%2B%2B).
-They are separate from the Python installation. 
+The installed compiled wheel passed **155 portable tests**. All **107 checked
+API signatures/dataclass definitions**, 5,000 RNG draws, **70 prepared tracking
+runs** and **four fresh FreeSurfer/FOD cases** matched the Python reference.
+Observed curvature-feature and streamline-coordinate differences were zero in
+those comparisons. The synthetic example produces **98 accepted tracks from
+256 attempts**. See [validation scope](docs/validation.rst).
 
+[Public CI](.github/workflows/ci.yml) audits repository contents, wheel integrity,
+installation and the synthetic example. The full scientific tests and core
+implementation are maintained privately. Human datasets and cohort outputs are
+excluded from downloads. Numerical agreement does not establish anatomical
+accuracy, complete sulcal coverage or correct registration.
+
+Current `main` contains documentation, approved general helpers and compiled
+artifacts. Earlier public commits and the preserved historical branches remain
+accessible. Compilation excludes core source files from new downloads; it does
+not prevent reverse engineering. See [distribution scope](docs/downloads.rst).
 
 ## Cite both methods
 
@@ -256,4 +276,6 @@ Please cite **both** articles when using this pipeline. If you prepare the ROIs 
 [CITATION.cff](CITATION.cff) and [CITATIONS.bib](CITATIONS.bib) provide citation
 metadata. [AUTHORS.rst](AUTHORS.rst) records contributor roles and AI-assisted
 development separately. [THIRD_PARTY_NOTICES.rst](THIRD_PARTY_NOTICES.rst)
-describes the scope of dependency and legacy notices.
+describes dependency terms and redistribution notices. Project-wide licensing
+terms remain unspecified; these dependency notices do not license SurfTracker
+itself.

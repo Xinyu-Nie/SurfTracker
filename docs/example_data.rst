@@ -2,13 +2,12 @@ Example data and HCP S900 redistribution
 ========================================
 
 The software package contains no human-subject images, surfaces or tractograms.
-The copyright holder of SurfTracker remains unspecified; the proposed software
-license does not replace the terms governing example data.
+Example datasets remain subject to their own data-use terms.
 
 Synthetic example (no dataset access needed)
 --------------------------------------------
 
-After installing the package, run this helper from the source archive::
+After installing the package, run the supplied helper from this checkout or binary kit::
 
     python scripts/synthetic_demo.py --output-dir output/synthetic
 
@@ -28,7 +27,7 @@ The WU-Minn HCP Open Access Data Use Terms dated April 26, 2013, explicitly
 permit redistribution of original Open Access data and derived data under the
 same terms (section 4). The S900 reference manual directs users to those terms.
 This includes HCP-derived surfaces, FODs and tractograms; they must not be
-presented as unrestricted data under the proposed BSD software license.
+presented as unrestricted example data.
 
 Every recipient working with shared HCP Open Access data must register with
 ConnectomeDB and agree to the terms. The current HCP site links to ConnectomeDB
@@ -47,7 +46,7 @@ Primary sources, checked November 10, 2026:
 Recommended distribution route
 ------------------------------
 
-Keep human example data outside the wheel, source archive and ordinary Git
+Keep human example data outside the wheel, binary kit and ordinary Git
 history. Use a separately versioned data deposit with a terms-acceptance access
 step (for example, an appropriate HCP/BALSA deposit), or have users obtain the
 original inputs from HCP and follow examples/README.rst. An unrestricted GitHub
