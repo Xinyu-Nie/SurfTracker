@@ -11,14 +11,13 @@ tractograms in physical RAS+ millimeters.
 | Python import | `swmtrack` |
 | Command | `swmtrack` |
 
-This public repository provides documentation, usage examples and compiled
-binary downloads. The scientific core is maintained privately. The `swmtrack`
-command, Python imports and recommended numerical settings are preserved.
+This public repository provides documentation, usage examples, and compiled
+binary downloads. 
 
 ## Download and install
 
 The current build is **0.3.0.dev18 for CPython 3.12 on Linux x86_64**.
-Windows, macOS, other Python versions and other architectures need separate
+Windows, macOS, other Python versions, and other architectures need separate
 builds. The native wheel has manylinux2014 / glibc 2.17 compatibility tags;
 execution was tested on a glibc 2.31 host.
 
