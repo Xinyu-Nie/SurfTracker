@@ -36,30 +36,14 @@ separate from this compiled download; this update makes no PyPI/TestPyPI upload.
 Public and private scope
 ------------------------
 
-The wheel contains ten native scientific modules and readable CLI, I/O,
+The wheel contains ten native scientific modules and a readable CLI, I/O,
 FreeSurfer import, registration, validation, metadata/API adapters and notices.
 Protected scientific Python sources, generated C/Cython files, caches, build
 logs and human datasets are excluded. Dataclasses and ordinary Python call
 signatures are preserved; Python source inspection and Numba Dispatcher
 internals are outside the compiled interface. See python_interface.rst.
 
-Core implementation and scientific tests are maintained privately. This public
-main branch contains documentation, examples, general QC/audit helpers and
-compiled downloads. Historical public commits and the legacy and dev-c++
-branches remain accessible. Changing the current tree does not withdraw earlier
-copies, and compilation does not prevent reverse engineering.
-
 Contributor credits and citations are preserved. Project-wide licensing terms
 remain unspecified; the dependency notices apply to their respective components
 and do not constitute a license grant for SurfTracker itself.
 
-Updates and caches
-------------------
-
-Record the installed version, dependency versions, processing parameters and
-artifact checksum with a study. The workflow records installed implementation
-hashes in new caches and checkpoints. Changed native modules or settings require
-a new output directory and recomputation. Older portable NPZ caches without a
-build identity remain readable under their existing algorithm-version checks;
-recompute them for a new production run. Do not mix the old swmtrack distribution
-and SurfTracker in one environment.
