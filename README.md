@@ -240,25 +240,6 @@ usage. Dataclass fields, defaults and ordinary call signatures are preserved.
 Core source inspection and Numba Dispatcher internals are outside the compiled
 interface.
 
-## Validation and distribution
-
-The installed compiled wheel passed **155 portable tests**. All **107 checked
-API signatures/dataclass definitions**, 5,000 RNG draws, **70 prepared tracking
-runs** and **four fresh FreeSurfer/FOD cases** matched the Python reference.
-Observed curvature-feature and streamline-coordinate differences were zero in
-those comparisons. The synthetic example produces **98 accepted tracks from
-256 attempts**. See [validation scope](docs/validation.rst).
-
-[Public CI](.github/workflows/ci.yml) audits repository contents, wheel integrity,
-installation and the synthetic example. The full scientific tests and core
-implementation are maintained privately. Human datasets and cohort outputs are
-excluded from downloads. Numerical agreement does not establish anatomical
-accuracy, complete sulcal coverage or correct registration.
-
-Current `main` contains documentation, approved general helpers and compiled
-artifacts. Earlier public commits and the preserved historical branches remain
-accessible. Compilation excludes core source files from new downloads; it does
-not prevent reverse engineering. See [distribution scope](docs/downloads.rst).
 
 ## Cite both methods
 
